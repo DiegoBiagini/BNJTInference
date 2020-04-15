@@ -1,7 +1,7 @@
 #
 # This file contains the structure for belief tables and the operations that can be executed on them
 #
-
+import numpy as np
 
 class BeliefTable(object):
     _variables = None
@@ -16,12 +16,25 @@ class BeliefTable(object):
         self._variables = variables
         self._table = table
 
+        # Check table size
+        if 2 ** len(self._variables) != self._table.size:
+            raise AttributeError("Wrong array size")
+
     def multiply(self, t2):
         """
         Args:
             t2: The second term of the multiplication
         """
-        pass
+        if self._variables.keys() == t2._variables.keys():
+            # Same variables, term by term multiplication
+            new_var = dict(self._variables)
+            new_table = np.empty(self._table.shape)
+
+            for index, value in np.ndenumerate(new_table):
+                new_table[index] = self._table[index] * t2._table[index]
+
+            return BeliefTable(new_var, new_table)
+
 
     def divide(self, t2):
         """
@@ -36,3 +49,7 @@ class BeliefTable(object):
             new_variables: A dictionary containing the variables to marginalize on
         """
         pass
+
+    def __str__(self):
+        return str(self._variables) + '\n' + str(self._table)
+
