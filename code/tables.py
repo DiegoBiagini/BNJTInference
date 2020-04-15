@@ -1,10 +1,10 @@
 #
-# This file contains the structure for belief tables and the operation that can be executed on them
+# This file contains the structure for belief tables and the operations that can be executed on them
 #
 
 
 class BeliefTable(object):
-    _variables = {}
+    _variables = None
     _table = None
 
     def __init__(self, variables, table):
