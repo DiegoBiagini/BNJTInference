@@ -10,7 +10,7 @@ class TableTests(unittest.TestCase):
     def test_creation(self):
         try:
             # Create valid single column belief table
-            var = dict.fromkeys({'A'})
+            var = dict.fromkeys(['A'])
             table = np.ones(2)
             btable = BeliefTable(var, table)
 
@@ -54,6 +54,55 @@ class TableTests(unittest.TestCase):
         self.assertEqual(res.get_prob((1, 0, 1)), 6)
         self.assertEqual(res.get_prob((1, 1, 0)), 6)
         self.assertEqual(res.get_prob((1, 1, 1)), 9)
+
+    def test_marginalization(self):
+        # Check that it doesn't allow marginalization on sets greater than the variables of the table
+        dict1 = dict.fromkeys(['A'])
+        dict2 = dict.fromkeys(['A', 'B'])
+        arr1 = np.arange(2).reshape(2)
+
+        t1 = BeliefTable(dict1, arr1)
+        self.assertRaises(AttributeError, t1.marginalize, dict2)
+
+        # Test marginalization on single variable
+        dict1 = dict.fromkeys(['A', 'B'])
+        dict2 = dict.fromkeys(['A'])
+
+        arr1 = np.arange(4).reshape((2, 2))
+
+        t1 = BeliefTable(dict1, arr1)
+        t2 = t1.marginalize(dict2)
+
+        self.assertEqual(t2.get_prob(0), 1)
+        self.assertEqual(t2.get_prob(1), 5)
+
+        # Test marginalization on one variable from 3
+        dict1 = dict.fromkeys(['A', 'B', 'C'])
+        dict2 = dict.fromkeys(['C'])
+
+        arr1 = np.arange(8).reshape((2, 2,2))
+
+        t1 = BeliefTable(dict1, arr1)
+        t2 = t1.marginalize(dict2)
+
+        self.assertEqual(t2.get_prob(0), 12)
+        self.assertEqual(t2.get_prob(1), 16)
+
+        # Test marginalization on two variables
+        dict1 = dict.fromkeys(['A', 'B', 'C'])
+        dict2 = dict.fromkeys(['A', 'C'])
+
+        arr1 = np.arange(8).reshape((2, 2,2))
+
+        t1 = BeliefTable(dict1, arr1)
+        t2 = t1.marginalize(dict2)
+
+        self.assertEqual(t2.get_prob((0, 0)), 2)
+        self.assertEqual(t2.get_prob((0, 1)), 4)
+        self.assertEqual(t2.get_prob((1, 0)), 10)
+        self.assertEqual(t2.get_prob((1, 1)), 12)
+
+
 
 
 

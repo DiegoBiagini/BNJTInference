@@ -3,6 +3,9 @@
 #
 import numpy as np
 
+import util
+
+
 class BeliefTable(object):
     _variables = None
     _table = None
@@ -72,7 +75,41 @@ class BeliefTable(object):
         Args:
             new_variables: A dictionary containing the variables to marginalize on
         """
-        pass
+        if not (new_variables.keys() < self._variables.keys()):
+            raise AttributeError("Variables to marginalize on must be a subset of variables of the table")
+
+        new_table = np.zeros((2,)*len(new_variables))
+
+        sum_variables = util.subtract_ordered_dict(self._variables, new_variables)
+
+        # Create template for indexing, setting up which variables have to be extracted whole :
+        # Marginalizing on AB over t_ABC means summing (:,:,0) + (:,:,1) (that is over C values)
+        coord_template = []
+        for el in self._variables:
+            if el in new_variables:
+                coord_template.append(slice(None))
+            else:
+                coord_template.append(0)
+
+        # Iterate over all possible values of V\W
+        for i in range(2**len(sum_variables)):
+            bin_string = format(i, '0' + str(len(sum_variables)) + 'b')
+            actual_coord = coord_template.copy()
+
+            # Find the subtable by substituting the non ':' places in the index template with actual indexes
+            index = 0     # Index for the binary string
+            for ind, element in enumerate(actual_coord):
+                if element != slice(None):
+                    actual_coord[ind] = int(bin_string[index])
+                    index += 1
+
+            # Add each table
+            new_table += self.get_prob(tuple(actual_coord))
+
+        return BeliefTable(new_variables, new_table)
+
+    def get_variable_index(self, variable):
+        return list(self._variables.keys()).index(variable)
 
     def get_prob(self, coordinates):
         return self._table[coordinates]
