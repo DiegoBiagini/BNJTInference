@@ -1,19 +1,16 @@
-import numpy as np
-
-from tables import BeliefTable
+from bayes_nets import BayesianNet
 
 
 def main():
-    # Test marginalization on two variables
-    dict1 = dict.fromkeys(['A', 'B', 'C'])
-    dict2 = dict.fromkeys(['A', 'C'])
+    net = BayesianNet()
+    net.add_variable('A')
+    net.add_variable('B')
+    net.add_variable('C')
+    net.add_dependence('B', 'A')
+    net.add_dependence('C', 'B')
+    net.add_dependence('A','C')
 
-    arr1 = np.arange(8).reshape((2, 2, 2))
-
-    t1 = BeliefTable(dict1, arr1)
-    t2 = t1.marginalize(dict2)
-    print(t1)
-    print(t2)
+    print(net.is_acyclic())
 
 
 if __name__ == '__main__':
