@@ -166,6 +166,46 @@ class BayesianNetTests(unittest.TestCase):
 
         self.assertFalse(net.is_acyclic())
 
+    def test_table_assignment(self):
+        # Check if assigning tables via identifiers works correctly even when the order of variables is wrong
+
+        tS = BeliefTable(dict.fromkeys('S'), np.zeros(2))
+        tD = BeliefTable(dict.fromkeys('D'), np.zeros(2))
+        tL = BeliefTable(dict.fromkeys(['S', 'D', 'L']), np.zeros((2, 2, 2)))
+
+        tS.set_probability_dict({'S': 0}, 0.9)
+        tS.set_probability_dict({'S': 1}, 0.1)
+
+        tD.set_probability_dict({'D': 0}, 0.9)
+        tD.set_probability_dict({'D': 1}, 0.1)
+
+        tL.set_probability_dict({'S': 0, 'D': 0, 'L': 0}, 0.98)
+        tL.set_probability_dict({'S': 0, 'D': 0, 'L': 1}, 0.02)
+        tL.set_probability_dict({'S': 0, 'D': 1, 'L': 0}, 0.15)
+        tL.set_probability_dict({'D': 1, 'L': 1, 'S': 0}, 0.85)
+        tL.set_probability_dict({'L': 0, 'S': 1, 'D': 0}, 0.1)
+        tL.set_probability_dict({'S': 1, 'D': 0, 'L': 1}, 0.9)
+        tL.set_probability_dict({'S': 1, 'D': 1, 'L': 0}, 0.05)
+        tL.set_probability_dict({'S': 1, 'D': 1, 'L': 1}, 0.95)
+
+        net = BayesianNet()
+        net.add_variable('L')
+        net.add_variable('S')
+        net.add_variable('D')
+
+        net.add_dependence('L', 'S')
+        net.add_dependence('L', 'D')
+
+        net.add_prob_table('L', tL)
+        net.add_prob_table('S', tS)
+        net.add_prob_table('D', tD)
+
+        self.assertEqual(str(tS), str(net.get_table('S')))
+        self.assertEqual(str(tD), str(net.get_table('D')))
+        self.assertEqual(str(tL), str(net.get_table('L')))
+
+
+
 
 
 

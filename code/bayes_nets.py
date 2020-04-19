@@ -5,6 +5,7 @@
 
 class BayesianNet(object):
     _graph = {}
+    _tables = {}
 
     def __init__(self, graph=None):
         if graph is None:
@@ -17,6 +18,7 @@ class BayesianNet(object):
             raise AttributeError("Trying to add a variable that is already inside the net")
         else:
             self._graph[new_variable] = []
+            self._tables[new_variable] = None
 
     def add_dependence(self, child, father):
         if father not in self._graph.keys():
@@ -25,6 +27,26 @@ class BayesianNet(object):
             raise AttributeError("Invalid child")
         else:
             self._graph[father].append(child)
+
+    def add_prob_table(self, variable, table):
+        if variable not in self._graph:
+            raise AttributeError("Variable not valid")
+        # Check if the passed table is correct
+        fathers = self.get_fathers(variable)
+        if fathers == []:
+            vars_in_table = [variable]
+        else:
+            vars_in_table = fathers
+            vars_in_table.insert(0, variable)
+
+        if not(sorted(table.get_variables()) == sorted(vars_in_table)):
+            raise AttributeError("Table for the variable is not valid")
+        self._tables[variable] = table
+
+    def get_table(self, variable):
+        if variable not in self._tables.keys():
+            raise AttributeError("Variable not valid")
+        return self._tables[variable]
 
     def get_fathers(self, child):
         if child not in self._graph.keys():

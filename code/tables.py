@@ -114,6 +114,47 @@ class BeliefTable(object):
     def get_prob(self, coordinates):
         return self._table[coordinates]
 
+    def get_prob_dict(self, variables):
+        if variables.keys() != self._variables.keys():
+            raise AttributeError("The variables in the dictionary were wrong")
+        # Match with the right index
+        coords = []
+        for el in self._variables:
+            coords.append(variables[el])
+
+        return self.get_prob(tuple(coords))
+
+    def get_variables(self):
+        return list(self._variables)
+
+    def set_probability_coord(self, coord, value):
+        if len(coord) != len(self._variables):
+            raise AttributeError("Wrong probability coordinate format")
+        self._table[coord] = value
+
+    def set_probability_dict(self, variables, value):
+        if variables.keys() != self._variables.keys():
+            raise AttributeError("The variables in the dictionary were wrong")
+        # Match with the right index
+        coords = []
+        for el in self._variables:
+            coords.append(variables[el])
+
+        self.set_probability_coord(tuple(coords), value)
+
+
     def __str__(self):
-        return str(self._variables) + '\n' + str(self._table)
+        full_str = ''
+        single_row = self._table.reshape(self._table.size)
+        i = 0
+        for x in np.nditer(single_row):
+            bin_string = format(i, '0' + str(len(self._variables)) + 'b')
+            j = 0
+            for var in self._variables:
+                full_str += var + ':' + bin_string[j] + ','
+                j += 1
+            full_str = full_str[:-1]
+            full_str += '-> ' + str(x) + '\n'
+            i += 1
+        return full_str
 
