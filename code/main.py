@@ -1,11 +1,27 @@
 import numpy as np
 
 from bayes_nets import BayesianNet
+from bayes_nets import JunctionTree
 from tables import BeliefTable
 
 
 def main():
-    pass
+    variables = dict.fromkeys(['S', 'D', 'H', 'L'])
+    jtree = JunctionTree(variables)
+
+    jtree.add_clique(dict.fromkeys(['S', 'H']))
+    jtree.add_clique(dict.fromkeys(['S', 'D', 'L']))
+    jtree.add_separator(dict.fromkeys(['S']))
+
+    jtree.add_link(['S', 'H'], ['S'])
+    jtree.add_link(['S', 'D', 'L'], ['S'])
+
+    jtree.set_variable_chosen_clique('H', ['S','H'])
+    jtree.set_variable_chosen_clique('S', ['S','D','L'])
+    jtree.set_variable_chosen_clique('D', ['S','D','L'])
+    jtree.set_variable_chosen_clique('L', ['S','D','L'])
+
+    print(jtree)
 
 
 def sample_case():
@@ -39,6 +55,19 @@ def sample_case():
     net.add_prob_table('S', tS)
     net.add_prob_table('D', tD)
     net.add_prob_table('L', tL)
+
+
+    # Insert evidence that L=1
+    prodTable = tS.multiply_table(tD).multiply_table(tL)
+    nT = tS.multiply_table(tD).multiply_table(tL)
+
+    nT.set_probability_dict({'S':slice(None), 'D':slice(None), 'L':0},0)
+
+    nT.divide_all(prodTable.marginalize(dict.fromkeys(['L'])).get_prob(1))
+    print(nT.marginalize(dict.fromkeys(['D'])))
+    print(nT.marginalize(dict.fromkeys(['S'])))
+    print(nT.marginalize(dict.fromkeys(['L'])))
+
 
 if __name__ == '__main__':
     main()

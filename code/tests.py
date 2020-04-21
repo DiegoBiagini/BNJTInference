@@ -3,6 +3,7 @@ import unittest
 import numpy as np
 
 from bayes_nets import BayesianNet
+from bayes_nets import JunctionTree
 from tables import BeliefTable
 
 
@@ -31,7 +32,7 @@ class TableTests(unittest.TestCase):
         b1 = BeliefTable(dict.fromkeys(keywords), table1)
         b2 = BeliefTable(dict.fromkeys(keywords), table2)
 
-        res = b1.multiply(b2)
+        res = b1.multiply_table(b2)
         self.assertEqual(res.get_prob((0, 0)), 0)
         self.assertEqual(res.get_prob((0, 1)), 1)
         self.assertEqual(res.get_prob((1, 0)), 4)
@@ -46,7 +47,7 @@ class TableTests(unittest.TestCase):
         b1 = BeliefTable(dict.fromkeys(keywords1), table1)
         b2 = BeliefTable(dict.fromkeys(keywords2), table2)
 
-        res = b1.multiply(b2)
+        res = b1.multiply_table(b2)
         self.assertEqual(res.get_prob((0, 0, 0)), 0)
         self.assertEqual(res.get_prob((0, 0, 1)), 0)
         self.assertEqual(res.get_prob((0, 1, 0)), 0)
@@ -122,7 +123,7 @@ class TableTests(unittest.TestCase):
         t3 = BeliefTable(dict3, arr3)
         t4 = BeliefTable(dict4, arr4)
 
-        t5 = t1.multiply(t2).multiply(t3).multiply(t4)
+        t5 = t1.multiply_table(t2).multiply_table(t3).multiply_table(t4)
         t5 = t5.marginalize(holes)
         self.assertAlmostEqual(t5.get_prob(0), 0.75)
         self.assertAlmostEqual(t5.get_prob(1), 0.25)
@@ -204,6 +205,25 @@ class BayesianNetTests(unittest.TestCase):
         self.assertEqual(str(tD), str(net.get_table('D')))
         self.assertEqual(str(tL), str(net.get_table('L')))
 
+
+class JunctionTreeTest(unittest.TestCase):
+
+    def test_creation(self):
+        # Just check that creation raises no errors
+        variables = dict.fromkeys(['S', 'D', 'H', 'L'])
+        jtree = JunctionTree(variables)
+
+        jtree.add_clique(dict.fromkeys(['S', 'H']))
+        jtree.add_clique(dict.fromkeys(['S', 'D', 'L']))
+        jtree.add_separator(dict.fromkeys(['S']))
+
+        jtree.add_link(['S', 'H'], ['S'])
+        jtree.add_link(['S', 'D', 'L'], ['S'])
+
+        jtree.set_variable_chosen_clique('H', ['S', 'H'])
+        jtree.set_variable_chosen_clique('S', ['S', 'D', 'L'])
+        jtree.set_variable_chosen_clique('D', ['S', 'D', 'L'])
+        jtree.set_variable_chosen_clique('L', ['S', 'D', 'L'])
 
 
 

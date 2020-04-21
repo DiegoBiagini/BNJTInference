@@ -10,20 +10,24 @@ class BeliefTable(object):
     _variables = None
     _table = None
 
-    def __init__(self, variables, table):
+    def __init__(self, variables, table=None):
         """
         Args:
             variables: A dictionary that represents the variables contained in the table
             table: A numpy multidimensional array, its size should be 2^^(number of variables)
         """
         self._variables = variables
-        self._table = table
+        if table is not None:
+            self._table = table
 
-        # Check table size
-        if 2 ** len(self._variables) != self._table.size:
-            raise AttributeError("Wrong array size")
+            # Check table size
+            if 2 ** len(self._variables) != self._table.size:
+                raise AttributeError("Wrong array size")
+        else:
+            self._table = np.zeros((2,) * len(variables))
 
-    def multiply(self, t2):
+
+    def multiply_table(self, t2):
         """
         Args:
             t2: The second term of the multiplication
@@ -49,7 +53,7 @@ class BeliefTable(object):
 
         return BeliefTable(new_variables, new_table)
 
-    def divide(self, t2):
+    def divide_table(self, t2):
         """
         Args:
             t2: The divider
@@ -108,6 +112,12 @@ class BeliefTable(object):
 
         return BeliefTable(new_variables, new_table)
 
+    def multiply_all(self, value):
+        self._table *= value
+
+    def divide_all(self, value):
+        self._table /= value
+
     def get_variable_index(self, variable):
         return list(self._variables.keys()).index(variable)
 
@@ -125,7 +135,7 @@ class BeliefTable(object):
         return self.get_prob(tuple(coords))
 
     def get_variables(self):
-        return list(self._variables)
+        return self._variables
 
     def set_probability_coord(self, coord, value):
         if len(coord) != len(self._variables):
@@ -142,7 +152,6 @@ class BeliefTable(object):
 
         self.set_probability_coord(tuple(coords), value)
 
-
     def __str__(self):
         full_str = ''
         single_row = self._table.reshape(self._table.size)
@@ -157,4 +166,10 @@ class BeliefTable(object):
             full_str += '-> ' + str(x) + '\n'
             i += 1
         return full_str
+
+    def __copy__(self):
+        copied_table = self._table.copy()
+        copied_vars = self._variables.copy()
+
+        return BeliefTable(copied_vars, copied_table)
 
