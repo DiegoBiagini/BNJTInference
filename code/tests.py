@@ -225,7 +225,116 @@ class JunctionTreeTest(unittest.TestCase):
         jtree.set_variable_chosen_clique('D', ['S', 'D', 'L'])
         jtree.set_variable_chosen_clique('L', ['S', 'D', 'L'])
 
+    def test_bnet_linking(self):
+        # Test if it's possible to calculate the probability of a variable given the bayesian net
+        # No messagge passing, single cluster
 
+        tS = BeliefTable(dict.fromkeys('S'), np.zeros(2))
+        tD = BeliefTable(dict.fromkeys('D'), np.zeros(2))
+        tL = BeliefTable(dict.fromkeys(['S', 'D', 'L']), np.zeros((2, 2, 2)))
+
+        tS.set_probability_dict({'S': 0}, 0.9)
+        tS.set_probability_dict({'S': 1}, 0.1)
+
+        tD.set_probability_dict({'D': 0}, 0.9)
+        tD.set_probability_dict({'D': 1}, 0.1)
+
+        tL.set_probability_dict({'S': 0, 'D': 0, 'L': 0}, 0.98)
+        tL.set_probability_dict({'S': 0, 'D': 0, 'L': 1}, 0.02)
+        tL.set_probability_dict({'S': 0, 'D': 1, 'L': 0}, 0.15)
+        tL.set_probability_dict({'D': 1, 'L': 1, 'S': 0}, 0.85)
+        tL.set_probability_dict({'L': 0, 'S': 1, 'D': 0}, 0.1)
+        tL.set_probability_dict({'S': 1, 'D': 0, 'L': 1}, 0.9)
+        tL.set_probability_dict({'S': 1, 'D': 1, 'L': 0}, 0.05)
+        tL.set_probability_dict({'S': 1, 'D': 1, 'L': 1}, 0.95)
+
+        net = BayesianNet()
+        net.add_variable('L')
+        net.add_variable('S')
+        net.add_variable('D')
+
+        net.add_dependence('L', 'S')
+        net.add_dependence('L', 'D')
+
+        net.add_prob_table('L', tL)
+        net.add_prob_table('S', tS)
+        net.add_prob_table('D', tD)
+
+        jtree = JunctionTree(dict.fromkeys(['S', 'D', 'L']))
+        jtree.add_clique(['S', 'D', 'L'])
+        jtree.set_variable_chosen_clique('S', ['S', 'D', 'L'])
+        jtree.set_variable_chosen_clique('D', ['S', 'D', 'L'])
+        jtree.set_variable_chosen_clique('L', ['S', 'D', 'L'])
+
+        jtree.initialize_tables(net)
+
+        Ltable = jtree.calculate_variables_probability(['L'])
+        self.assertAlmostEqual(Ltable.get_prob(0), 0.8168)
+        self.assertAlmostEqual(Ltable.get_prob(1), 0.1832)
+
+    def test_inserting_evidence(self):
+        # Cluster tree with only one node
+        tS = BeliefTable(dict.fromkeys('S'), np.zeros(2))
+        tD = BeliefTable(dict.fromkeys('D'), np.zeros(2))
+        tL = BeliefTable(dict.fromkeys(['S', 'D', 'L']), np.zeros((2, 2, 2)))
+
+        tS.set_probability_dict({'S': 0}, 0.9)
+        tS.set_probability_dict({'S': 1}, 0.1)
+
+        tD.set_probability_dict({'D': 0}, 0.9)
+        tD.set_probability_dict({'D': 1}, 0.1)
+
+        tL.set_probability_dict({'S': 0, 'D': 0, 'L': 0}, 0.98)
+        tL.set_probability_dict({'S': 0, 'D': 0, 'L': 1}, 0.02)
+        tL.set_probability_dict({'S': 0, 'D': 1, 'L': 0}, 0.15)
+        tL.set_probability_dict({'D': 1, 'L': 1, 'S': 0}, 0.85)
+        tL.set_probability_dict({'L': 0, 'S': 1, 'D': 0}, 0.1)
+        tL.set_probability_dict({'S': 1, 'D': 0, 'L': 1}, 0.9)
+        tL.set_probability_dict({'S': 1, 'D': 1, 'L': 0}, 0.05)
+        tL.set_probability_dict({'S': 1, 'D': 1, 'L': 1}, 0.95)
+
+        net = BayesianNet()
+        net.add_variable('L')
+        net.add_variable('S')
+        net.add_variable('D')
+
+        net.add_dependence('L', 'S')
+        net.add_dependence('L', 'D')
+
+        net.add_prob_table('L', tL)
+        net.add_prob_table('S', tS)
+        net.add_prob_table('D', tD)
+
+        jtree = JunctionTree(dict.fromkeys(['S', 'D', 'L']))
+        jtree.add_clique(['S', 'D', 'L'])
+        jtree.set_variable_chosen_clique('S', ['S', 'D', 'L'])
+        jtree.set_variable_chosen_clique('D', ['S', 'D', 'L'])
+        jtree.set_variable_chosen_clique('L', ['S', 'D', 'L'])
+
+        jtree.initialize_tables(net)
+
+        # Add evidence to one node
+        jtree.add_evidence('L', 0)
+        Stable = jtree.calculate_variables_probability(['S'])
+        Dtable = jtree.calculate_variables_probability(['D'])
+
+        self.assertAlmostEqual(Stable.get_prob(0), 0.9884, 4)
+        self.assertAlmostEqual(Stable.get_prob(1), 0.0116, 4)
+
+        self.assertAlmostEqual(Dtable.get_prob(0), 0.9829, 4)
+        self.assertAlmostEqual(Dtable.get_prob(1), 0.0171, 4)
+
+        # Add evidence to another one
+        jtree.add_evidence('S', 0)
+
+        Stable = jtree.calculate_variables_probability(['S'])
+        Dtable = jtree.calculate_variables_probability(['D'])
+
+        self.assertAlmostEqual(Stable.get_prob(0), 1, 4)
+        self.assertAlmostEqual(Stable.get_prob(1), 0, 4)
+
+        self.assertAlmostEqual(Dtable.get_prob(0), 0.9833, 4)
+        self.assertAlmostEqual(Dtable.get_prob(1), 0.0167, 4)
 
 
 

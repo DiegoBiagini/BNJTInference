@@ -1,7 +1,10 @@
 #
 # This file contains the data structures used to represent and work on bayesian nets
 #
+import numpy as np
+
 from tables import BeliefTable
+
 
 class BayesianNet(object):
     _graph = {}
@@ -12,6 +15,8 @@ class BayesianNet(object):
             self._graph = {}
         else:
             self._graph = graph
+
+        self._tables = {}
 
     def add_variable(self, new_variable):
         if new_variable in self._graph.keys():
@@ -116,6 +121,9 @@ class JunctionTree(object):
 
     def __init__(self, variables):
         self._variables = variables
+        self._cliques = []
+        self._separators = []
+        self._chosen_clique = {}
 
     def add_clique(self, clique):
         clique = dict.fromkeys(clique)
@@ -183,10 +191,69 @@ class JunctionTree(object):
         return found_sep
 
     def add_evidence(self, variable, value):
-        pass
+        if variable not in self._variables:
+            raise AttributeError("Variable not valid")
+        if not (value == 0 or value == 1):
+            raise AttributeError("Value not valid")
+
+        # Find the clique to update
+        chosen_clique = self._chosen_clique[variable]
+
+        table = chosen_clique.get_prob_table()
+
+        # Select which cell in the table has to be set to 0(those that contradict the evidence)
+        coord_dict = {}
+        for el in table.get_variables():
+            if el != variable:
+                coord_dict[el] = slice(None)
+            else:
+                coord_dict[el] = 1 - value
+
+        table.set_probability_dict(coord_dict, 0)
+
+        # Calculate P(U |e) = P(U,e)/P(e)
+        table.divide_all(table.marginalize(dict.fromkeys(variable)).get_prob(value))
+
+    def get_joint_probability_table(self):
+        # Multiply all the tables of the cliques
+        result_table = BeliefTable(self._variables, np.ones((2,)* len(self._variables)))
+        for clique in self._cliques:
+            result_table = result_table.multiply_table(clique.get_prob_table())
+
+        # Divide the result by all the separator tables
+        for sep in self._separators:
+            result_table = result_table.divide_table(sep.get_prob_table())
+
+        return result_table
+
+    def calculate_variables_probability(self, variables):
+        variables = dict.fromkeys(variables)
+        if not variables.keys() <= self._variables.keys():
+            raise AttributeError("Variables not valid")
+
+        table = self.get_joint_probability_table()
+
+        return table.marginalize(variables)
 
     def propagate(self, first, separator, second):
         pass
+
+    def initialize_tables(self, bayes_net):
+        # Set all separators and cliques to 1
+        for sep in self._separators:
+            sep.get_prob_table().set_probability_coord((slice(None),)*len(sep.get_variables()), 1)
+
+        for clique in self._cliques:
+            clique.get_prob_table().set_probability_coord((slice(None),)*len(clique.get_variables()), 1)
+
+        # Look up which node in the cluster tree was chosen for each variable to store its table in
+        for variable in self._variables:
+            clique = self._chosen_clique[variable]
+
+            # Find the initial table in the bayes net
+            table = bayes_net.get_table(variable)
+
+            clique.set_prob_table(clique.get_prob_table().multiply_table(table))
 
     def __str__(self):
         rstring = 'Variables:' + str(self._variables) + '\n'
@@ -214,7 +281,7 @@ class JunctionTree(object):
 
 
 class Node(object):
-    _table = []
+    _table = None
     _neighbours = []
 
     def __init__(self, table):
@@ -226,6 +293,9 @@ class Node(object):
 
     def get_prob_table(self):
         return self._table
+
+    def set_prob_table(self, table):
+        self._table = table
 
     def add_neighbour(self, node):
         self._neighbours.append(node)
