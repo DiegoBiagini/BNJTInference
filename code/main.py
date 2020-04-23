@@ -1,100 +1,105 @@
-import numpy as np
-
 from bayes_nets import BayesianNet
 from bayes_nets import JunctionTree
 from tables import BeliefTable
 
 
 def main():
-    tS = BeliefTable(dict.fromkeys('S'), np.zeros(2))
-    tD = BeliefTable(dict.fromkeys('D'), np.zeros(2))
-    tL = BeliefTable(dict.fromkeys(['S', 'D', 'L']), np.zeros((2, 2, 2)))
 
-    tS.set_probability_dict({'S': 0}, 0.9)
-    tS.set_probability_dict({'S': 1}, 0.1)
+    tMC = BeliefTable(['MC'])
+    tS = BeliefTable(['S', 'MC'])
+    tT = BeliefTable(['T', 'MC'])
+    tC = BeliefTable(['C', 'S', 'T'])
+    tH = BeliefTable(['H', 'T'])
 
-    tD.set_probability_dict({'D': 0}, 0.9)
-    tD.set_probability_dict({'D': 1}, 0.1)
+    tMC.set_probability_dict({'MC': 0}, 0.8)
+    tMC.set_probability_dict({'MC': 1}, 0.2)
 
-    tL.set_probability_dict({'S': 0, 'D': 0, 'L': 0}, 0.98)
-    tL.set_probability_dict({'S': 0, 'D': 0, 'L': 1}, 0.02)
-    tL.set_probability_dict({'S': 0, 'D': 1, 'L': 0}, 0.15)
-    tL.set_probability_dict({'D': 1, 'L': 1, 'S': 0}, 0.85)
-    tL.set_probability_dict({'L': 0, 'S': 1, 'D': 0}, 0.1)
-    tL.set_probability_dict({'S': 1, 'D': 0, 'L': 1}, 0.9)
-    tL.set_probability_dict({'S': 1, 'D': 1, 'L': 0}, 0.05)
-    tL.set_probability_dict({'S': 1, 'D': 1, 'L': 1}, 0.95)
+    tS.set_probability_dict({'S': 0, 'MC': 0}, 0.8)
+    tS.set_probability_dict({'S': 0, 'MC': 1}, 0.2)
+    tS.set_probability_dict({'S': 1, 'MC': 0}, 0.2)
+    tS.set_probability_dict({'S': 1, 'MC': 1}, 0.8)
+
+    tT.set_probability_dict({'T': 0, 'MC': 0}, 0.95)
+    tT.set_probability_dict({'T': 0, 'MC': 1}, 0.8)
+    tT.set_probability_dict({'T': 1, 'MC': 0}, 0.05)
+    tT.set_probability_dict({'T': 1, 'MC': 1}, 0.2)
+
+    tC.set_probability_dict({'C': 0, 'S': 0, 'T': 0}, 0.95)
+    tC.set_probability_dict({'C': 0, 'S': 0, 'T': 1}, 0.2)
+    tC.set_probability_dict({'C': 0, 'S': 1, 'T': 0}, 0.2)
+    tC.set_probability_dict({'C': 0, 'S': 1, 'T': 1}, 0.2)
+    tC.set_probability_dict({'C': 1, 'S': 0, 'T': 0}, 0.05)
+    tC.set_probability_dict({'C': 1, 'S': 0, 'T': 1}, 0.8)
+    tC.set_probability_dict({'C': 1, 'S': 1, 'T': 0}, 0.8)
+    tC.set_probability_dict({'C': 1, 'S': 1, 'T': 1}, 0.8)
+
+    tH.set_probability_dict({'H': 0, 'T': 0}, 0.4)
+    tH.set_probability_dict({'H': 0, 'T': 1}, 0.2)
+    tH.set_probability_dict({'H': 1, 'T': 0}, 0.6)
+    tH.set_probability_dict({'H': 1, 'T': 1}, 0.8)
+
+
 
     net = BayesianNet()
-    net.add_variable('L')
+    net.add_variable('MC')
     net.add_variable('S')
-    net.add_variable('D')
+    net.add_variable('T')
+    net.add_variable('C')
+    net.add_variable('H')
 
-    net.add_dependence('L', 'S')
-    net.add_dependence('L', 'D')
+    net.add_dependence('S', 'MC')
+    net.add_dependence('T', 'MC')
+    net.add_dependence('C', 'S')
+    net.add_dependence('C', 'T')
+    net.add_dependence('H', 'T')
 
-    net.add_prob_table('L', tL)
+    net.add_prob_table('MC', tMC)
     net.add_prob_table('S', tS)
-    net.add_prob_table('D', tD)
+    net.add_prob_table('T', tT)
+    net.add_prob_table('C', tC)
+    net.add_prob_table('H', tH)
 
-    jtree = JunctionTree(dict.fromkeys(['S', 'D', 'L']))
-    jtree.add_clique(['S', 'D', 'L'])
-    jtree.set_variable_chosen_clique('S', ['S', 'D', 'L'])
-    jtree.set_variable_chosen_clique('D', ['S', 'D', 'L'])
-    jtree.set_variable_chosen_clique('L', ['S', 'D', 'L'])
+    jtree = JunctionTree(['MC', 'S', 'T', 'C', 'H'])
+
+    jtree.add_clique(['T', 'S', 'C'])
+    jtree.add_clique(['T', 'S', 'MC'])
+    jtree.add_clique(['T', 'H'])
+
+    jtree.add_separator(['T', 'S'])
+    jtree.add_separator(['T'])
+
+    jtree.add_link(['T', 'S', 'MC'], ['T', 'S'])
+    jtree.add_link(['T', 'S', 'C'], ['T', 'S'])
+    jtree.add_link(['T', 'S', 'MC'], ['T'])
+    jtree.add_link(['T', 'H'], ['T'])
+
+    jtree.set_variable_chosen_clique('MC', ['T', 'S', 'MC'])
+    jtree.set_variable_chosen_clique('S', ['T', 'S', 'MC'])
+    jtree.set_variable_chosen_clique('T', ['T', 'S', 'MC'])
+    jtree.set_variable_chosen_clique('C', ['T', 'S', 'C'])
+    jtree.set_variable_chosen_clique('H', ['T', 'H'])
+
+    print(jtree)
 
     jtree.initialize_tables(net)
-    jtree.add_evidence('L', 0)
 
-    Stable = jtree.calculate_variables_probability(['S'])
-    DTable = jtree.calculate_variables_probability(['D'])
-    print(Stable)
-    print(DTable)
+    jtree.add_evidence('S', 0)
+    jtree.add_evidence('MC', 1)
 
+    jtree.sum_propagate()
 
-def sample_case():
-    tS = BeliefTable(dict.fromkeys('S'), np.zeros(2))
-    tD = BeliefTable(dict.fromkeys('D'), np.zeros(2))
-    tL = BeliefTable(dict.fromkeys(['S', 'D', 'L']), np.zeros((2, 2, 2)))
-
-    tS.set_probability_dict({'S': 0}, 0.9)
-    tS.set_probability_dict({'S': 1}, 0.1)
-
-    tD.set_probability_dict({'D': 0}, 0.9)
-    tD.set_probability_dict({'D': 1}, 0.1)
-
-    tL.set_probability_dict({'S': 0, 'D': 0, 'L': 0}, 0.98)
-    tL.set_probability_dict({'S': 0, 'D': 0, 'L': 1}, 0.02)
-    tL.set_probability_dict({'S': 0, 'D': 1, 'L': 0}, 0.15)
-    tL.set_probability_dict({'S': 0, 'D': 1, 'L': 1}, 0.85)
-    tL.set_probability_dict({'S': 1, 'D': 0, 'L': 0}, 0.1)
-    tL.set_probability_dict({'S': 1, 'D': 0, 'L': 1}, 0.9)
-    tL.set_probability_dict({'S': 1, 'D': 1, 'L': 0}, 0.05)
-    tL.set_probability_dict({'S': 1, 'D': 1, 'L': 1}, 0.95)
-
-    net = BayesianNet()
-    net.add_variable('S')
-    net.add_variable('D')
-    net.add_variable('L')
-
-    net.add_dependence('L', 'S')
-    net.add_dependence('L', 'D')
-
-    net.add_prob_table('S', tS)
-    net.add_prob_table('D', tD)
-    net.add_prob_table('L', tL)
+    MCTable = jtree.calculate_variables_probability(['MC'])
+    STable = jtree.calculate_variables_probability(['S'])
+    TTable = jtree.calculate_variables_probability(['T'])
+    CTable = jtree.calculate_variables_probability(['C'])
+    HTable = jtree.calculate_variables_probability(['H'])
 
 
-    # Insert evidence that L=1
-    prodTable = tS.multiply_table(tD).multiply_table(tL)
-    nT = tS.multiply_table(tD).multiply_table(tL)
-
-    nT.set_probability_dict({'S':slice(None), 'D':slice(None), 'L':0},0)
-
-    nT.divide_all(prodTable.marginalize(dict.fromkeys(['L'])).get_prob(1))
-    print(nT.marginalize(dict.fromkeys(['D'])))
-    print(nT.marginalize(dict.fromkeys(['S'])))
-    print(nT.marginalize(dict.fromkeys(['L'])))
+    print(MCTable)
+    print(STable)
+    print(TTable)
+    print(CTable)
+    print(HTable)
 
 
 if __name__ == '__main__':

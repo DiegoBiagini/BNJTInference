@@ -336,6 +336,85 @@ class JunctionTreeTest(unittest.TestCase):
         self.assertAlmostEqual(Dtable.get_prob(0), 0.9833, 4)
         self.assertAlmostEqual(Dtable.get_prob(1), 0.0167, 4)
 
+    def test_collect_and_distribute(self):
+        # Apple tree example, 2 clusters
+        tS = BeliefTable(dict.fromkeys('S'), np.zeros(2))
+        tD = BeliefTable(dict.fromkeys('D'), np.zeros(2))
+        tL = BeliefTable(dict.fromkeys(['S', 'D', 'L']), np.zeros((2, 2, 2)))
+        tH = BeliefTable(dict.fromkeys(['H', 'S']))
+
+        tS.set_probability_dict({'S': 0}, 0.9)
+        tS.set_probability_dict({'S': 1}, 0.1)
+
+        tD.set_probability_dict({'D': 0}, 0.9)
+        tD.set_probability_dict({'D': 1}, 0.1)
+
+        tL.set_probability_dict({'S': 0, 'D': 0, 'L': 0}, 0.98)
+        tL.set_probability_dict({'S': 0, 'D': 0, 'L': 1}, 0.02)
+        tL.set_probability_dict({'S': 0, 'D': 1, 'L': 0}, 0.15)
+        tL.set_probability_dict({'D': 1, 'L': 1, 'S': 0}, 0.85)
+        tL.set_probability_dict({'L': 0, 'S': 1, 'D': 0}, 0.1)
+        tL.set_probability_dict({'S': 1, 'D': 0, 'L': 1}, 0.9)
+        tL.set_probability_dict({'S': 1, 'D': 1, 'L': 0}, 0.05)
+        tL.set_probability_dict({'S': 1, 'D': 1, 'L': 1}, 0.95)
+
+        tH.set_probability_dict({'H': 0, 'S': 0}, 0.8)
+        tH.set_probability_dict({'H': 0, 'S': 1}, 0.3)
+        tH.set_probability_dict({'H': 1, 'S': 0}, 0.2)
+        tH.set_probability_dict({'H': 1, 'S': 1}, 0.7)
+
+        net = BayesianNet()
+        net.add_variable('L')
+        net.add_variable('S')
+        net.add_variable('D')
+        net.add_variable('H')
+
+        net.add_dependence('L', 'S')
+        net.add_dependence('L', 'D')
+        net.add_dependence('H', 'S')
+
+        net.add_prob_table('L', tL)
+        net.add_prob_table('S', tS)
+        net.add_prob_table('D', tD)
+        net.add_prob_table('H', tH)
+
+        jtree = JunctionTree(dict.fromkeys(['S', 'D', 'L', 'H']))
+        jtree.add_clique(['S', 'D', 'L'])
+        jtree.set_variable_chosen_clique('S', ['S', 'D', 'L'])
+        jtree.set_variable_chosen_clique('D', ['S', 'D', 'L'])
+        jtree.set_variable_chosen_clique('L', ['S', 'D', 'L'])
+
+        jtree.add_clique(['S', 'H'])
+        jtree.set_variable_chosen_clique('H', ['H', 'S'])
+
+        jtree.add_separator(['S'])
+        jtree.add_link(['S', 'H'], ['S'])
+        jtree.add_link(['S', 'D', 'L'], ['S'])
+
+        jtree.initialize_tables(net)
+
+        jtree.add_evidence('L', 0)
+        jtree.add_evidence('H', 1)
+        jtree.sum_propagate()
+
+        STable = jtree.calculate_variables_probability(['S'])
+        DTable = jtree.calculate_variables_probability(['D'])
+        LTable = jtree.calculate_variables_probability(['L'])
+        HTable = jtree.calculate_variables_probability(['H'])
+
+        self.assertAlmostEqual(round(STable.get_prob(0),4), 0.9604)
+        self.assertAlmostEqual(round(STable.get_prob(1),4), 0.0396)
+
+        self.assertAlmostEqual(round(DTable.get_prob(0),4), 0.9819)
+        self.assertAlmostEqual(round(DTable.get_prob(1),4), 0.0181)
+
+        self.assertAlmostEqual(round(LTable.get_prob(0),4), 1)
+        self.assertAlmostEqual(round(LTable.get_prob(1),4), 0)
+
+        self.assertAlmostEqual(round(HTable.get_prob(0),4), 0)
+        self.assertAlmostEqual(round(HTable.get_prob(1),4), 1)
+
+
 
 
 

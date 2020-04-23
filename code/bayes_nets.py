@@ -120,7 +120,7 @@ class JunctionTree(object):
     _chosen_clique = {}
 
     def __init__(self, variables):
-        self._variables = variables
+        self._variables = dict.fromkeys(variables)
         self._cliques = []
         self._separators = []
         self._chosen_clique = {}
@@ -212,7 +212,7 @@ class JunctionTree(object):
         table.set_probability_dict(coord_dict, 0)
 
         # Calculate P(U |e) = P(U,e)/P(e)
-        table.divide_all(table.marginalize(dict.fromkeys(variable)).get_prob(value))
+        table.divide_all(table.marginalize({variable: None}).get_prob(value))
 
     def get_joint_probability_table(self):
         # Multiply all the tables of the cliques
@@ -227,16 +227,120 @@ class JunctionTree(object):
         return result_table
 
     def calculate_variables_probability(self, variables):
-        variables = dict.fromkeys(variables)
+        if type(variables) is not str:
+            variables = dict.fromkeys(variables)
+        else:
+            variables = { variables : None}
+
         if not variables.keys() <= self._variables.keys():
-            raise AttributeError("Variables not valid")
+            raise AttributeError("Variables not valid", str(variables))
 
         table = self.get_joint_probability_table()
 
         return table.marginalize(variables)
 
-    def propagate(self, first, separator, second):
-        pass
+    @staticmethod
+    def propagate(first, separator, second):
+        if (separator not in first.get_neighbours() or separator not in second.get_neighbours()
+                or first not in separator.get_neighbours() or second not in separator.get_neighbours()):
+            raise AttributeError("Combination of nodes not valid")
+        tv = first.get_prob_table()
+        ts = separator.get_prob_table()
+        tw = second.get_prob_table()
+
+        ts_star = tv.marginalize(separator.get_variables())
+        separator.set_prob_table(ts_star)
+
+        second.set_prob_table(tw.multiply_table(ts_star.divide_table(ts)))
+
+    def distribute_evidence(self, node):
+        if node not in self._cliques:
+            raise AttributeError("Wrong starting clique")
+
+        visited_labels = dict.fromkeys(self._cliques)
+        for element in visited_labels:
+            visited_labels[element] = False
+
+        queue = []
+        visited_labels[node] = True
+        queue.append(node)
+
+        while len(queue) != 0:
+            v = queue.pop(0)
+
+            for neighbour in self.get_neighbouring_cliques(v):
+                if not visited_labels[neighbour]:
+                    visited_labels[neighbour] = True
+                    queue.append(neighbour)
+
+                    common_separator = [x for x in v.get_neighbours() if x in neighbour.get_neighbours()][0]
+                    JunctionTree.propagate(v, common_separator, neighbour)
+
+    def collect_evidence(self, node):
+        if node not in self._cliques:
+            raise AttributeError("Wrong starting clique")
+
+        visited_labels = dict.fromkeys(self._cliques)
+        for element in visited_labels:
+            visited_labels[element] = False
+
+        parents = dict.fromkeys(self._cliques)
+        for element in parents:
+            parents[element] = None
+        queue = []
+        visited_labels[node] = True
+        queue.append(node)
+
+        while len(queue) != 0:
+            v = queue.pop(0)
+
+            if v.received_evidence:
+                father = parents[v]
+                while father is not None:
+                    common_separator = [x for x in v.get_neighbours() if x in father.get_neighbours()][0]
+
+                    JunctionTree.propagate(v, common_separator, father)
+                    father = parents[father]
+
+                # Update the state of evidence collecting
+                v.received_evidence = False
+
+            for neighbour in self.get_neighbouring_cliques(v):
+                if not visited_labels[neighbour]:
+                    visited_labels[neighbour] = True
+                    parents[neighbour] = v
+                    queue.append(neighbour)
+
+    def sum_propagate(self):
+        # Choose a root(any one should be fine)
+        root = self._cliques[0]
+
+        self.collect_evidence(root)
+        self.distribute_evidence(root)
+
+        # Normalize
+        # Find normalizing constant by marginalizing on any variable
+        variable_chosen = list(self._variables)[0]
+        norm_table = self.calculate_variables_probability(variable_chosen)
+        norm_constant = norm_table.get_prob(0) + norm_table.get_prob(1)
+
+        for clique in self._cliques:
+            clique.get_prob_table().divide_all(norm_constant)
+        for separator in self._separators:
+            separator.get_prob_table().divide_all(norm_constant)
+
+    def get_neighbouring_cliques(self, clique):
+        if clique not in self._cliques:
+            raise AttributeError("Clique not valid")
+
+        neigh_cliques = []
+        for sep in clique.get_neighbours():
+            for clique_of_sep in sep.get_neighbours():
+                if clique_of_sep not in neigh_cliques and clique_of_sep != clique:
+                    neigh_cliques.append(clique_of_sep)
+
+        return neigh_cliques
+
 
     def initialize_tables(self, bayes_net):
         # Set all separators and cliques to 1
@@ -254,6 +358,7 @@ class JunctionTree(object):
             table = bayes_net.get_table(variable)
 
             clique.set_prob_table(clique.get_prob_table().multiply_table(table))
+
 
     def __str__(self):
         rstring = 'Variables:' + str(self._variables) + '\n'
@@ -283,10 +388,12 @@ class JunctionTree(object):
 class Node(object):
     _table = None
     _neighbours = []
+    received_evidence = None
 
     def __init__(self, table):
         self._table = table
         self._neighbours = []
+        self.received_evidence = False
 
     def get_variables(self):
         return self._table.get_variables()
@@ -304,5 +411,5 @@ class Node(object):
         return self._neighbours
 
     def node_vars_to_string(self):
-        return ''.join(list(self.get_variables()))
+        return '.'.join(list(self.get_variables()))
 

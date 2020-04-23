@@ -13,10 +13,10 @@ class BeliefTable(object):
     def __init__(self, variables, table=None):
         """
         Args:
-            variables: A dictionary that represents the variables contained in the table
+            variables: A list that represents the variables contained in the table
             table: A numpy multidimensional array, its size should be 2^^(number of variables)
         """
-        self._variables = variables
+        self._variables = dict.fromkeys(variables)
         if table is not None:
             self._table = table
 
@@ -45,11 +45,18 @@ class BeliefTable(object):
             # For example: t_{A,B}*t_{A,C}=t_{A,B,C}
             # the element in position (a,b,c) in the result is the product of the elements in positions
             # (a,b) and in position (a,c)
+            dict_1_proxy = dict.fromkeys(self._variables)
+            dict_2_proxy = dict.fromkeys(t2._variables)
+            i = 0
+            for variable in list(new_variables.keys()):
+                if variable in dict_1_proxy.keys():
+                    dict_1_proxy[variable] = index[i]
+                if variable in dict_2_proxy.keys():
+                    dict_2_proxy[variable] = index[i]
+                i += 1
 
-            first_index = tuple([x for i, x in enumerate(index) if list(new_variables.keys())[i] in self._variables.keys()])
-            second_index = tuple([x for i, x in enumerate(index) if list(new_variables.keys())[i] in t2._variables.keys()])
+            new_table[index] = self._table[tuple(dict_1_proxy.values())] * t2._table[tuple(dict_2_proxy.values())]
 
-            new_table[index] = self._table[first_index] * t2._table[second_index]
 
         return BeliefTable(new_variables, new_table)
 
@@ -67,10 +74,17 @@ class BeliefTable(object):
 
         for index, value in np.ndenumerate(new_table):
             # Find the corresponding indexes in the 2 multiplying terms
-            first_index = tuple([x for i, x in enumerate(index) if list(new_variables.keys())[i] in self._variables.keys()])
-            second_index = tuple([x for i, x in enumerate(index) if list(new_variables.keys())[i] in t2._variables.keys()])
+            dict_1_proxy = dict.fromkeys(self._variables)
+            dict_2_proxy = dict.fromkeys(t2._variables)
+            i = 0
+            for variable in list(new_variables.keys()):
+                if variable in dict_1_proxy.keys():
+                    dict_1_proxy[variable] = index[i]
+                if variable in dict_2_proxy.keys():
+                    dict_2_proxy[variable] = index[i]
+                i += 1
 
-            new_table[index] = self._table[first_index] / t2._table[second_index]
+            new_table[index] = self._table[tuple(dict_1_proxy.values())] / t2._table[tuple(dict_2_proxy.values())]
 
         return BeliefTable(new_variables, new_table)
 
