@@ -226,7 +226,7 @@ class JunctionTree(object):
 
         return result_table
 
-    def calculate_variables_probability(self, variables):
+    def calculate_variables_probability_on_universe(self, variables):
         if type(variables) is not str:
             variables = dict.fromkeys(variables)
         else:
@@ -238,6 +238,12 @@ class JunctionTree(object):
         table = self.get_joint_probability_table()
 
         return table.marginalize(variables)
+
+    def calculate_variable_probability(self, variable):
+        if variable not in self._variables:
+            raise AttributeError("Variable not valid")
+        chosen_clique = self._chosen_clique[variable]
+        return chosen_clique.get_prob_table().marginalize({variable : None})
 
     @staticmethod
     def propagate(first, separator, second):
@@ -321,7 +327,7 @@ class JunctionTree(object):
         # Normalize
         # Find normalizing constant by marginalizing on any variable
         variable_chosen = list(self._variables)[0]
-        norm_table = self.calculate_variables_probability(variable_chosen)
+        norm_table = self.calculate_variable_probability(variable_chosen)
         norm_constant = norm_table.get_prob(0) + norm_table.get_prob(1)
 
         for clique in self._cliques:
@@ -359,6 +365,19 @@ class JunctionTree(object):
 
             clique.set_prob_table(clique.get_prob_table().multiply_table(table))
 
+    def get_clique_from_dict(self, clique):
+        clique = dict.fromkeys(clique)
+        for element in self._cliques:
+            if element.get_variables() == clique:
+                return element
+        raise AttributeError("Clique not found")
+
+    def get_separator_from_dict(self, sep):
+        sep = dict.fromkeys(sep)
+        for element in self._separators:
+            if element.get_variables() == sep:
+                return element
+        raise AttributeError("Separator not found")
 
     def __str__(self):
         rstring = 'Variables:' + str(self._variables) + '\n'

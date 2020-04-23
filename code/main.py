@@ -1,3 +1,5 @@
+import time
+
 from bayes_nets import BayesianNet
 from bayes_nets import JunctionTree
 from tables import BeliefTable
@@ -87,18 +89,12 @@ def main():
     jtree.add_evidence('MC', 1)
 
     jtree.sum_propagate()
-
-    MCTable = jtree.calculate_variables_probability(['MC'])
-    STable = jtree.calculate_variables_probability(['S'])
-    TTable = jtree.calculate_variables_probability(['T'])
-    CTable = jtree.calculate_variables_probability(['C'])
-    HTable = jtree.calculate_variables_probability(['H'])
+    a = time.time_ns()
+    HTable = jtree.calculate_variable_probability('H')
+    print(time.time_ns() - a )
 
 
-    print(MCTable)
-    print(STable)
-    print(TTable)
-    print(CTable)
+
     print(HTable)
 
 
