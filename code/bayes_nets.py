@@ -198,6 +198,7 @@ class JunctionTree(object):
 
         # Find the clique to update
         chosen_clique = self._chosen_clique[variable]
+        chosen_clique.received_evidence = True
 
         table = chosen_clique.get_prob_table()
 
@@ -213,6 +214,7 @@ class JunctionTree(object):
 
         # Calculate P(U |e) = P(U,e)/P(e)
         table.divide_all(table.marginalize({variable: None}).get_prob(value))
+
 
     def get_joint_probability_table(self):
         # Multiply all the tables of the cliques
@@ -257,7 +259,9 @@ class JunctionTree(object):
         ts_star = tv.marginalize(separator.get_variables())
         separator.set_prob_table(ts_star)
 
-        second.set_prob_table(tw.multiply_table(ts_star.divide_table(ts)))
+        int1 = ts_star.divide_table(ts)
+        int2 = tw.multiply_table(int1)
+        second.set_prob_table(int2)
 
     def distribute_evidence(self, node):
         if node not in self._cliques:

@@ -57,7 +57,6 @@ class BeliefTable(object):
 
             new_table[index] = self._table[tuple(dict_1_proxy.values())] * t2._table[tuple(dict_2_proxy.values())]
 
-
         return BeliefTable(new_variables, new_table)
 
     def divide_table(self, t2):
@@ -84,7 +83,11 @@ class BeliefTable(object):
                     dict_2_proxy[variable] = index[i]
                 i += 1
 
-            new_table[index] = self._table[tuple(dict_1_proxy.values())] / t2._table[tuple(dict_2_proxy.values())]
+            if self._table[tuple(dict_1_proxy.values())] == 0:
+                # Make it so 0/anything is 0(No NaN problems)
+                new_table[index] = 0
+            else:
+                new_table[index] = self._table[tuple(dict_1_proxy.values())] / t2._table[tuple(dict_2_proxy.values())]
 
         return BeliefTable(new_variables, new_table)
 
