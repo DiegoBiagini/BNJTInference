@@ -268,7 +268,7 @@ class JunctionTreeTest(unittest.TestCase):
 
         jtree.initialize_tables(net)
 
-        Ltable = jtree.calculate_variables_probability(['L'])
+        Ltable = jtree.calculate_variable_probability('L')
         self.assertAlmostEqual(Ltable.get_prob(0), 0.8168)
         self.assertAlmostEqual(Ltable.get_prob(1), 0.1832)
 
@@ -315,8 +315,8 @@ class JunctionTreeTest(unittest.TestCase):
 
         # Add evidence to one node
         jtree.add_evidence('L', 0)
-        Stable = jtree.calculate_variables_probability(['S'])
-        Dtable = jtree.calculate_variables_probability(['D'])
+        Stable = jtree.calculate_variable_probability('S')
+        Dtable = jtree.calculate_variable_probability('D')
 
         self.assertAlmostEqual(Stable.get_prob(0), 0.9884, 4)
         self.assertAlmostEqual(Stable.get_prob(1), 0.0116, 4)
@@ -327,8 +327,8 @@ class JunctionTreeTest(unittest.TestCase):
         # Add evidence to another one
         jtree.add_evidence('S', 0)
 
-        Stable = jtree.calculate_variables_probability(['S'])
-        Dtable = jtree.calculate_variables_probability(['D'])
+        Stable = jtree.calculate_variable_probability('S')
+        Dtable = jtree.calculate_variable_probability('D')
 
         self.assertAlmostEqual(Stable.get_prob(0), 1, 4)
         self.assertAlmostEqual(Stable.get_prob(1), 0, 4)
@@ -397,22 +397,22 @@ class JunctionTreeTest(unittest.TestCase):
         jtree.add_evidence('H', 1)
         jtree.sum_propagate()
 
-        STable = jtree.calculate_variables_probability(['S'])
-        DTable = jtree.calculate_variables_probability(['D'])
-        LTable = jtree.calculate_variables_probability(['L'])
-        HTable = jtree.calculate_variables_probability(['H'])
+        STable = jtree.calculate_variable_probability('S')
+        DTable = jtree.calculate_variable_probability('D')
+        LTable = jtree.calculate_variable_probability('L')
+        HTable = jtree.calculate_variable_probability('H')
 
-        self.assertAlmostEqual(round(STable.get_prob(0),4), 0.9604)
-        self.assertAlmostEqual(round(STable.get_prob(1),4), 0.0396)
+        self.assertAlmostEqual(round(STable.get_prob(0), 4), 0.9604)
+        self.assertAlmostEqual(round(STable.get_prob(1), 4), 0.0396)
 
-        self.assertAlmostEqual(round(DTable.get_prob(0),4), 0.9819)
-        self.assertAlmostEqual(round(DTable.get_prob(1),4), 0.0181)
+        self.assertAlmostEqual(round(DTable.get_prob(0), 4), 0.9819)
+        self.assertAlmostEqual(round(DTable.get_prob(1), 4), 0.0181)
 
-        self.assertAlmostEqual(round(LTable.get_prob(0),4), 1)
-        self.assertAlmostEqual(round(LTable.get_prob(1),4), 0)
+        self.assertAlmostEqual(round(LTable.get_prob(0), 4), 1)
+        self.assertAlmostEqual(round(LTable.get_prob(1), 4), 0)
 
-        self.assertAlmostEqual(round(HTable.get_prob(0),4), 0)
-        self.assertAlmostEqual(round(HTable.get_prob(1),4), 1)
+        self.assertAlmostEqual(round(HTable.get_prob(0), 4), 0)
+        self.assertAlmostEqual(round(HTable.get_prob(1), 4), 1)
 
 
 

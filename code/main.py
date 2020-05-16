@@ -39,7 +39,6 @@ def main():
     tH.set_probability_dict({'H': 1, 'T': 1}, 0.8)
 
 
-
     net = BayesianNet()
     net.add_variable('MC')
     net.add_variable('S')
@@ -58,6 +57,7 @@ def main():
     net.add_prob_table('T', tT)
     net.add_prob_table('C', tC)
     net.add_prob_table('H', tH)
+    print(net.get_U_probability_string())
 
     jtree = JunctionTree(['MC', 'S', 'T', 'C', 'H'])
 
