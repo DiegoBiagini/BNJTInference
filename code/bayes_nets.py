@@ -532,7 +532,7 @@ class JunctionTree(object):
         and then normalizing the tables of all cliques/separator
         """
         # Choose a root(any one should be fine)
-        root = self._cliques[0]
+        root = self._cliques[1]
 
         self.collect_evidence(root)
         self.distribute_evidence(root)
@@ -569,7 +569,8 @@ class JunctionTree(object):
 
     def initialize_tables(self, bayes_net):
         """
-        Initializes the JunctionTree to the initial values of the tables of a BayesianNet
+        Initializes the JunctionTree to the initial values of the tables of a BayesianNet and distributes their
+        information over all the Nodes
 
         :type bayes_net: BayesianNet
         :return: None
@@ -589,6 +590,12 @@ class JunctionTree(object):
             table = bayes_net.get_table(variable)
 
             clique.set_prob_table(clique.get_prob_table().multiply_table(table))
+
+        # Distribute initial information by allowing a round of message passing
+        for node in self._cliques:
+            node.received_evidence = True
+
+        self.sum_propagate()
 
     def get_clique_from_dict(self, clique):
         """

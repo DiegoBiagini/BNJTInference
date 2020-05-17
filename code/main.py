@@ -1,10 +1,32 @@
+import util as util
 from bayes_nets import BayesianNet
 from bayes_nets import JunctionTree
 from tables import BeliefTable
 
 
 def main():
+    model = build_cancer()
 
+    util.serialize_model(model[0], model[1], "models/cancer.dat")
+
+    net, jtree = util.load_model("models/cancer.dat")
+    jtree.initialize_tables(net)
+
+    MCTable = jtree.calculate_variable_probability('MC')
+    STable = jtree.calculate_variable_probability('T')
+    TTable = jtree.calculate_variable_probability('S')
+    CTable = jtree.calculate_variable_probability('C')
+    HTable = jtree.calculate_variable_probability('H')
+
+    print(MCTable)
+    print(STable)
+    print(TTable)
+    print(CTable)
+    print(HTable)
+
+
+
+def build_cancer():
     tMC = BeliefTable(['MC'])
     tS = BeliefTable(['S', 'MC'])
     tT = BeliefTable(['T', 'MC'])
@@ -38,7 +60,6 @@ def main():
     tH.set_probability_dict({'H': 1, 'T': 0}, 0.6)
     tH.set_probability_dict({'H': 1, 'T': 1}, 0.8)
 
-
     net = BayesianNet()
     net.add_variable('MC')
     net.add_variable('S')
@@ -57,7 +78,7 @@ def main():
     net.add_prob_table('T', tT)
     net.add_prob_table('C', tC)
     net.add_prob_table('H', tH)
-    print(net.get_U_probability_string())
+    # print(net.get_U_probability_string())
 
     jtree = JunctionTree(['MC', 'S', 'T', 'C', 'H'])
 
@@ -79,33 +100,7 @@ def main():
     jtree.set_variable_chosen_clique('C', ['T', 'S', 'C'])
     jtree.set_variable_chosen_clique('H', ['T', 'H'])
 
-    print(jtree)
-
-    jtree.initialize_tables(net)
-
-    jtree.add_evidence('S', 0)
-    jtree.add_evidence('MC', 1)
-
-    MCTS = jtree.get_clique_from_dict(['MC','T', 'S'])
-    TSC = jtree.get_clique_from_dict(['C','T', 'S'])
-    TH  = jtree.get_clique_from_dict(['T', 'H'])
-
-    TS = jtree.get_separator_from_dict(['T', 'S'])
-    T = jtree.get_separator_from_dict(['T'])
-
-    jtree.sum_propagate()
-
-    MCTable = jtree.calculate_variable_probability('MC')
-    STable = jtree.calculate_variable_probability('T')
-    TTable = jtree.calculate_variable_probability('S')
-    CTable = jtree.calculate_variable_probability('C')
-    HTable = jtree.calculate_variable_probability('H')
-
-    print(MCTable)
-    print(STable)
-    print(TTable)
-    print(CTable)
-    print(HTable)
+    return net, jtree
 
 
 

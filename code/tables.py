@@ -287,3 +287,17 @@ class BeliefTable(object):
 
         return BeliefTable(copied_vars, copied_table)
 
+"""
+TODO reimplement with multiple values(I hope it won't be hell)
+"""
+class Variable(object):
+
+    name = ""
+    values = {}
+
+    def __init__(self, name, values):
+        self.name = name
+        self.values = dict.fromkeys(values)
+
+    def get_cardinality(self):
+        return len(self.values)
