@@ -1,9 +1,12 @@
 #
 # This file contains the data structures used to represent and work on bayesian nets
 #
+from collections import Counter
+
 import numpy as np
 
 from tables import BeliefTable
+from tables import Variable
 
 
 class BayesianNet(object):
@@ -26,7 +29,7 @@ class BayesianNet(object):
         """
         Initializes the Bayesian Net with the given graph, or empty if no graph is given
 
-        :type graph: dict[string,list]
+        :type graph: dict[Variable,list]
         """
         if graph is None:
             self._graph = {}
@@ -40,7 +43,7 @@ class BayesianNet(object):
         Add the given variable to the BN
 
         :param new_variable: variable to add
-        :type new_variable: string
+        :type new_variable: Variable
         :return: None
         """
         if new_variable in self._graph.keys():
@@ -54,11 +57,16 @@ class BayesianNet(object):
         Adds a link between two nodes in the Bayesian Net(child depends on father)
 
         :param child: child node
-        :type child: string
+        :type child: Variable or str
         :param father: father node
-        :type father: string
+        :type father: Variable or str
         :return: None
         """
+        if isinstance(child, str):
+            child = self.get_variable_by_name(child)
+        if isinstance(father, str):
+            father = self.get_variable_by_name(father)
+
         if father not in self._graph.keys():
             raise AttributeError("Invalid father")
         elif child not in self._graph.keys():
@@ -70,17 +78,23 @@ class BayesianNet(object):
         """
         Adds a Belief Table to a variable
 
-        :type variable: string
+        :type variable: Variable or str
         :type table: BeliefTable
         :return: None
         """
+        if isinstance(variable, str):
+            variable = self.get_variable_by_name(variable)
+
         if variable not in self._graph:
             raise AttributeError("Variable not valid")
 
         # Check if the passed table is correct
-        vars_in_table = [variable] + self.get_fathers(variable)
+        vars_in_table = dict.fromkeys([variable] + self.get_fathers(variable))
 
-        if not(sorted(table.get_variables()) == sorted(vars_in_table)):
+        a = Counter(table.get_variables())
+        b = Counter(vars_in_table)
+
+        if not(a == b):
             raise AttributeError("Table for the variable is not valid")
         self._tables[variable] = table
 
@@ -88,7 +102,7 @@ class BayesianNet(object):
         """
         Returns the conditional probability table of a variable in the BN
 
-        :type variable: string
+        :type variable: Variable
         :return: table relative to the variable
         :rtype: BeliefTable
         """
@@ -100,9 +114,9 @@ class BayesianNet(object):
         """
         Returns all the father variables of a given variable
 
-        :type child: string
+        :type child: Variable
         :return: fathers
-        :rtype: list[string]
+        :rtype: list[Variables]
         """
         if child not in self._graph.keys():
             raise AttributeError("Child not found")
@@ -168,6 +182,20 @@ class BayesianNet(object):
 
         return u_prob_string
 
+    def get_variable_by_name(self, name):
+        """
+        Searches for a variable with the given name in the bayesian net
+
+        :type name: str
+        :return: variable
+        :rtype: Variable
+        """
+        for var in self._tables.keys():
+            if var.name == name:
+                return var
+
+        raise AttributeError("Variable not found")
+
     def __str__(self):
         """
         Represents the BN as only its graph structure, that is {father : [child1, child2], ...}
@@ -183,7 +211,7 @@ class JunctionTree(object):
 
     _variables = {}
     """
-    Dict of strings, contains the variables of the bayesian net and by extension the variables of the junction tree
+    Dict of Variables, contains the variables of the bayesian net and by extension the variables of the junction tree
     """
 
     _cliques = []
@@ -203,7 +231,7 @@ class JunctionTree(object):
         """
         Initialize the JunctionTree with the given variables and with no cliques/separators
 
-        :type variables: dict[string,None] or list[str]
+        :type variables: dict[Variable,None] or list[Variable]
         """
         self._variables = dict.fromkeys(variables)
         self._cliques = []
@@ -213,10 +241,14 @@ class JunctionTree(object):
     def add_clique(self, clique):
         """
         Add a valid clique made up of variables to the list of cliques
+        Variables can be both list/dict of references or a list of variable names
 
-        :type clique: dict[string,None] or list[string]
+        :type clique: list[str] or dict[Variable,None] or list[Variable]
         :return: None
         """
+        if all(isinstance(x, str) for x in clique):
+            clique = [self.get_variable_by_name(name) for name in clique]
+
         clique = dict.fromkeys(clique)
         if not clique.keys() <= self._variables.keys():
             raise AttributeError("The given clique is not valid for the junction tree")
@@ -226,10 +258,14 @@ class JunctionTree(object):
     def add_separator(self, separator):
         """
         Add a valid separator made up of variables to the list of separators
+        Variables can be both list/dict of references or a list of variable names
 
-        :type separator: dict[string,None] or list[string]
+        :type separator: list[str] or dict[Variable,None] or list[Variable]
         :return: None
         """
+        if all(isinstance(x, str) for x in separator):
+            separator = [self.get_variable_by_name(name) for name in separator]
+
         separator = dict.fromkeys(separator)
         if not separator.keys() <= self._variables.keys():
             raise AttributeError("The given separator is not valid for the junction tree")
@@ -240,11 +276,16 @@ class JunctionTree(object):
         """
         Adds a link between a clique and a separator, given two dicts/lists to represent the Nodes
 
-        :type clique: dict[string,None] or list[str]
-        :type separator: dict[string,None] or list[str]
+        :type clique: list[str] or dict[Variable,None] or list[Variable]
+        :type separator: list[str] or dict[Variable,None] or list[Variable]
         :return: None
         """
-        true_clique = self._get_clique(clique)
+        if all(isinstance(x, str) for x in clique):
+            clique = [self.get_variable_by_name(name) for name in clique]
+        if all(isinstance(x, str) for x in separator):
+            separator = [self.get_variable_by_name(name) for name in separator]
+
+        true_clique = self.get_clique(clique)
         true_sep = self.get_separator(separator)
         self._add_link(true_clique, true_sep)
 
@@ -268,18 +309,23 @@ class JunctionTree(object):
         """
         Sets the clique(passed as a dict/list) chosen during creation for the given variable
 
-        :type variable: string
-        :type clique: dict[string,None] or list[str]
+        :type variable: Variable or str
+        :type clique: list[str] or dict[Variable,None] or list[Variable]
         :return: None
         """
-        true_clique = self._get_clique(clique)
+        if isinstance(variable, str):
+            variable = self.get_variable_by_name(variable)
+        if all(isinstance(x, str) for x in clique):
+            clique = [self.get_variable_by_name(name) for name in clique]
+
+        true_clique = self.get_clique(clique)
         self._set_variable_chosen_clique(variable, true_clique)
 
     def _set_variable_chosen_clique(self, variable, clique):
         """
         Sets the clique(passed as a reference) chosen during creation for the given variable
 
-        :type variable: string
+        :type variable: Variable
         :type clique: Node
         :return: None
         """
@@ -291,57 +337,60 @@ class JunctionTree(object):
 
         self._chosen_clique[variable] = clique
 
-    def _get_clique(self, clique_vars):
+    def get_clique(self, clique_vars):
         """
         Returns a reference to a clique, given the variables it's made up of
 
-        :type clique_vars: dict[string,None] or list[string]
+        :type clique_vars: list[str] or dict[Variable,None] or list[Variable]
         :return: a reference to the clique if it's found
         :rtype: Node
         """
-        dict_clique = dict.fromkeys(clique_vars)
-        found_clique = None
-        for element in self._cliques:
-            if element.get_variables() == dict_clique:
-                found_clique = element
-                break
+        if all(isinstance(x, str) for x in clique_vars):
+            clique_vars = [self.get_variable_by_name(name) for name in clique_vars]
 
-        if found_clique is None:
-            raise AttributeError("Clique not valid")
-        return found_clique
+        dict_clique = dict.fromkeys(clique_vars)
+
+        for clique in self._cliques:
+            if clique.get_variables() == dict_clique:
+                return clique
+
+        raise AttributeError("Clique not valid")
 
     def get_separator(self, separator_vars):
         """
         Returns a reference to a separator, given the variables it's made up of
 
-        :type separator_vars: dict[string,None] or list[string]
+        :type separator_vars: list[str] or dict[Variable,None] or list[Variable]
         :return: a reference to the separator if it's found
         :rtype: Node
         """
-        dict_sep = dict.fromkeys(separator_vars)
-        found_sep = None
-        for element in self._separators:
-            if element.get_variables() == dict_sep:
-                found_sep = element
-                break
+        if all(isinstance(x, str) for x in separator_vars):
+            separator_vars = [self.get_variable_by_name(name) for name in separator_vars]
 
-        if found_sep is None:
-            raise AttributeError("Separator not valid")
-        return found_sep
+        dict_sep = dict.fromkeys(separator_vars)
+
+        for sep in self._separators:
+            if sep.get_variables() == dict_sep:
+                return sep
+
+        raise AttributeError("Separator not valid")
 
     def add_evidence(self, variable, value):
         """
         Add evidence to a variable in the JunctionTree by setting the table of the relative clique to the correct
         configuration(according to evidence)
 
-        :type variable: string
-        :param value: evidence to assert, can only be 0 or 1
-        :type value: int
+        :type variable: Variable or str
+        :param value: evidence to assert, can only be a correct value according to the variable
+        :type value: int or string
         :return: None
         """
+        if isinstance(variable, str):
+            variable = self.get_variable_by_name(variable)
+
         if variable not in self._variables:
             raise AttributeError("Variable not valid")
-        if not (value == 0 or value == 1):
+        if value not in variable.values:
             raise AttributeError("Value not valid")
 
         # Find the clique to update
@@ -351,17 +400,19 @@ class JunctionTree(object):
         table = chosen_clique.get_prob_table()
 
         # Select which cell in the table has to be set to 0(those that contradict the evidence)
-        coord_dict = {}
-        for el in table.get_variables():
-            if el != variable:
-                coord_dict[el] = slice(None)
-            else:
-                coord_dict[el] = 1 - value
+        confuted_values = [x for x in variable.values if x != value]
+        for conf_value in confuted_values:
+            coord_dict = {}
+            for el in table.get_variables():
+                if el != variable:
+                    coord_dict[el.name] = slice(None)
+                else:
+                    coord_dict[el.name] = conf_value
 
-        table.set_probability_dict(coord_dict, 0)
+            table.set_probability_dict(coord_dict, 0)
 
         # Calculate P(U |e) = P(U,e)/P(e)
-        table.divide_all(table.marginalize({variable: None}).get_prob(value))
+        table.divide_all(table.marginalize({variable: None}).get_prob_dict({variable.name: value}))
 
     def get_joint_probability_table(self):
         """
@@ -388,11 +439,14 @@ class JunctionTree(object):
         calculating the joint prob table and then marginalizing on the given variables.
         Does not use the efficiency of Hugin propagation.
 
-        :type variables: str or list[str] or dict[str,None]
+        :type variables: Variable or list[Variable] or dict[Variable,None] or list[str]
         :return: probability table of the given variables
         :rtype: BeliefTable
         """
-        if type(variables) is not str:
+        if all(isinstance(x, str) for x in variables):
+            variables = [self.get_variable_by_name(name) for name in variables]
+
+        if type(variables) is not Variable:
             variables = dict.fromkeys(variables)
         else:
             variables = {variables: None}
@@ -409,10 +463,13 @@ class JunctionTree(object):
         Calculate the probabilities of the given variable by consulting the clique chosen for that variable during the
         JunctionTree creation. Needs Hugin propagation to give out correct results.
 
-        :type variable: string
+        :type variable: Variable or str
         :return: table over the single variable
         :rtype: BeliefTable
         """
+        if isinstance(variable, str):
+            variable = self.get_variable_by_name(variable)
+
         if variable not in self._variables:
             raise AttributeError("Variable not valid")
         chosen_clique = self._chosen_clique[variable]
@@ -510,11 +567,14 @@ class JunctionTree(object):
 
             # If a Node with evidence is found propagate its information over all its ancestors
             if v.received_evidence:
-                ancestors = parents[v]
+                current_child = v
+                ancestors = parents[current_child]
                 while ancestors is not None:
-                    common_separator = [x for x in v.get_neighbours() if x in ancestors.get_neighbours()][0]
+                    common_separator = [x for x in current_child.get_neighbours() if x in ancestors.get_neighbours()][0]
 
-                    JunctionTree.absorption(v, common_separator, ancestors)
+                    JunctionTree.absorption(current_child, common_separator, ancestors)
+
+                    current_child = ancestors
                     ancestors = parents[ancestors]
 
                 # Update the state of evidence collecting
@@ -532,7 +592,7 @@ class JunctionTree(object):
         and then normalizing the tables of all cliques/separator
         """
         # Choose a root(any one should be fine)
-        root = self._cliques[1]
+        root = self._cliques[0]
 
         self.collect_evidence(root)
         self.distribute_evidence(root)
@@ -541,7 +601,12 @@ class JunctionTree(object):
         # Find normalizing constant by marginalizing on any variable
         variable_chosen = list(self._variables)[0]
         norm_table = self.calculate_variable_probability(variable_chosen)
-        norm_constant = norm_table.get_prob(0) + norm_table.get_prob(1)
+
+        norm_constant = 0
+        i = 0
+        for value in variable_chosen.values:
+            norm_constant += norm_table.get_prob(i)
+            i += 1
 
         for clique in self._cliques:
             clique.get_prob_table().divide_all(norm_constant)
@@ -577,10 +642,10 @@ class JunctionTree(object):
         """
         # Set all separators and cliques to 1
         for sep in self._separators:
-            sep.get_prob_table().set_probability_coord((slice(None),)*len(sep.get_variables()), 1)
+            sep.get_prob_table().set_probability_coord((slice(None),) * len(sep.get_variables()), 1)
 
         for clique in self._cliques:
-            clique.get_prob_table().set_probability_coord((slice(None),)*len(clique.get_variables()), 1)
+            clique.get_prob_table().set_probability_coord((slice(None),) * len(clique.get_variables()), 1)
 
         # Look up which node in the cluster tree was chosen for each variable to store its table in
         for variable in self._variables:
@@ -601,7 +666,7 @@ class JunctionTree(object):
         """
         Get reference to a clique given the variables it's made up of
 
-        :type clique: dict[string,None] or list[string]
+        :type clique: dict[Variable,None] or list[Variable]
         :return: the clique or None if it doesn't exists
         :rtype: Node
         """
@@ -615,7 +680,7 @@ class JunctionTree(object):
         """
         Get reference to a separator given the variables it's made up of
 
-        :type sep: dict[string,None] or list[string]
+        :type sep: dict[Variable,None] or list[Variable]
         :return: the separator or None if it doesn't exists
         :rtype: Node
         """
@@ -625,12 +690,25 @@ class JunctionTree(object):
                 return element
         return None
 
+    def get_variable_by_name(self, name):
+        """
+        Searches for a variable with the given name in the JunctionTree
+
+        :type name: str
+        :return: variable
+        :rtype: Variable
+        """
+        for var in self._variables:
+            if name == var.name:
+                return var
+        raise AttributeError("Variable not found")
+
     def __str__(self):
         """
         Represents the JunctionTree by listing all variables, all cliques, all separators and which clique was chosen
         for each variable
         """
-        rstring = 'Variables:' + str(self._variables) + '\n'
+        rstring = 'Variables:' + str([str(var) for var in self._variables]) + '\n'
 
         rstring += 'Cliques:\n'
         for clique in self._cliques:
@@ -648,7 +726,7 @@ class JunctionTree(object):
 
         rstring += 'Chosen clique for each variable:\n'
         for el in self._chosen_clique.keys():
-            rstring += str(el) + ':' + self._chosen_clique[el].node_vars_to_string() + ', '
+            rstring += el.name + ':' + self._chosen_clique[el].node_vars_to_string() + ', '
         rstring = rstring[:-2]
 
         return rstring
@@ -689,7 +767,7 @@ class Node(object):
         Returns the variables that make up the Node
 
         :return: variables
-        :rtype: dict[string, None]
+        :rtype: dict[Variable, None]
         """
         return self._table.get_variables()
 
@@ -736,5 +814,4 @@ class Node(object):
 
         :rtype: string
         """
-        return '.'.join(list(self.get_variables()))
-
+        return '.'.join([x.name for x in list(self.get_variables())])

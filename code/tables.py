@@ -15,33 +15,34 @@ class BeliefTable(object):
 
     _variables = None
     """
-    A dictionary of variables,used as an ordered set. Each variable is represented by a key(of type string)
-    in the dictionary with None as its value.
+    A dictionary of variables,used as an ordered set. Each variable is an object of type Variable in the dictionary 
+    with None as its value.
     """
     _table = None
     """
     A numpy table that contains all the entries of the BeliefTable. 
-    For simplicity each variable can only take True or False as its values, so the size of the table is always 2^n, 
-    where n is the number of variables
+    # For simplicity each variable can only take True or False as its values, so the size of the table is always 2^n, #
+    The size of the table is \prod_{v\in V}|v| where V is the set of variables , that is the product of the number of
+    values each variable can take
     """
 
     def __init__(self, variables, table=None):
         """
-        Initializes the BeliefTable with the variables and optionally their table, if no table is given a 2^n table of
-        zeros will be used
+        Initializes the BeliefTable with the variables and optionally their table, if no table is given an appropriate
+        table of zeros will be used
 
         :type table: np.ndarray
-        :type variables: list[string] or dict[string,None]
+        :type variables: list[Variable] or dict[Variable,None]
         """
         self._variables = dict.fromkeys(variables)
         if table is not None:
             self._table = table
 
             # Check table size
-            if 2 ** len(self._variables) != self._table.size:
+            if self.get_vars_size() != self._table.size:
                 raise AttributeError("Wrong array size")
         else:
-            self._table = np.zeros((2,) * len(variables))
+            self._table = np.zeros(util.get_shape_from_var_dict(self._variables))
 
     def multiply_table(self, t2):
         """
@@ -60,14 +61,14 @@ class BeliefTable(object):
         new_variables = {**self._variables, **t2._variables}
 
         # Create empty table
-        new_shape = (2,) * len(new_variables)
+        new_shape = util.get_shape_from_var_dict(new_variables)
         new_table = np.empty(new_shape)
 
         for index, value in np.ndenumerate(new_table):
             # Find the corresponding indexes in the 2 multiplying terms
             # For example: t_{A,B}*t_{A,C}=t_{A,B,C}
-            # the element in position (0,1,0) in the result is the product of the elements in positions
-            # (0,1) and in position (0,0)
+            # the element in position (a0,b0,c1) in the result is the product of the elements in positions
+            # (a0,b0) and in position (b0,c1)
             dict_1_proxy = dict.fromkeys(self._variables)
             dict_2_proxy = dict.fromkeys(t2._variables)
 
@@ -97,7 +98,7 @@ class BeliefTable(object):
         new_variables = {**self._variables, **t2._variables}
 
         # Create empty table
-        new_shape = (2,) * len(new_variables)
+        new_shape = util.get_shape_from_var_dict(new_variables)
         new_table = np.empty(new_shape)
 
         for index, value in np.ndenumerate(new_table):
@@ -127,19 +128,29 @@ class BeliefTable(object):
         t_{B=0} = t_{A=0,B=0} + t_{A=1, B=0} ; t_{B=1} = T_{A=0,B=1} + t_{A=1,B=1}
 
         :param new_variables: set of variables to marginalize on
-        :type new_variables: dict[string,None]
+        :type new_variables: dict[Variable,None] or list[Variable]
         :return: the marginalized table
         :rtype: BeliefTable
         """
+        new_variables = dict.fromkeys(new_variables)
         if not (new_variables.keys() < self._variables.keys()):
             raise AttributeError("Variables to marginalize on must be a subset of variables of the table")
 
-        new_table = np.zeros((2,)*len(new_variables))
+        # new_table = np.zeros((2,)*len(new_variables))
+        new_shape = []
+        for el in new_variables.keys():
+            new_shape.append(el.get_cardinality())
+
+        new_table = np.zeros(tuple(new_shape))
 
         sum_variables = util.subtract_ordered_dict(self._variables, new_variables)
+        sum_shape = []
+        for el in sum_variables.keys():
+            sum_shape.append(el.get_cardinality())
+        sum_entries = util.shape_to_list_of_entries(sum_shape)
 
         # Create template for indexing, setting up which variables have to be extracted whole :
-        # Marginalizing on AB over t_ABC means summing (:,:,0) + (:,:,1) (that is over C values)
+        # Marginalizing on AB over t_ABC means summing (:,:,c0) + (:,:,c1) +... (that is over C values)
         coord_template = []
         for el in self._variables:
             if el in new_variables:
@@ -147,16 +158,16 @@ class BeliefTable(object):
             else:
                 coord_template.append(0)
 
-        # Iterate over all possible values of V\W
-        for i in range(2**len(sum_variables)):
-            bin_string = format(i, '0' + str(len(sum_variables)) + 'b')
+        # Iterate over all possible values of V\W 
+        for entry in sum_entries:
+            #bin_string = format(i, '0' + str(len(sum_variables)) + 'b')
             actual_coord = coord_template.copy()
 
             # Find the subtable by substituting the non ':' places in the index template with actual indexes
             index = 0     # Index for the binary string
             for ind, element in enumerate(actual_coord):
                 if element != slice(None):
-                    actual_coord[ind] = int(bin_string[index])
+                    actual_coord[ind] = entry[index]
                     index += 1
 
             # Add each table
@@ -186,7 +197,7 @@ class BeliefTable(object):
         """
         Returns the index of the given variable in the variable "list"(it's still an ordered set)
 
-        :type variable: string
+        :type variable: Variable
         :return: index of the variable
         :rtype: int
         """
@@ -195,8 +206,7 @@ class BeliefTable(object):
     def get_prob(self, coordinates):
         """
         Returns the entry of the numpy table at the given coordinates.
-        It's used to get the value of a certain configuration of variables, for example if the belief table is t_ABC
-        and I want the value of t_{A=0,B=1,C=1}, I have to pass (0,1,1)
+        Don't use this to get values of the table when the number values of any variable is more than 2
 
         :type coordinates: tuple or int
         :return: the value in the np table
@@ -204,24 +214,49 @@ class BeliefTable(object):
         """
         return self._table[coordinates]
 
-    def get_prob_dict(self, variables):
+    def get_prob_var_values(self, values_coordinates):
+        """
+        It's used to get the value of a certain configuration of variables, for example if the belief table is t_ABC
+        and I want the value of t_{A='a1',B='b0',C='c1'}, I have to pass ('a1','b0','c1')
+        Value coordinates must be in the correct order, don't use this if you don't know the true order of the variables
+
+        :param values_coordinates: a tuple of var values
+        :type values_coordinates: tuple[string or int]
+        :return: the value in the np table
+        :rtype: int or float
+        """
+        if len(values_coordinates) != len(self._variables):
+            raise AttributeError("Wrong number of variables")
+
+        vars_list = list(self._variables.keys())
+
+        actual_coordinates = []
+        i = 0
+        for el in values_coordinates:
+            actual_coordinates.append(vars_list[i].get_value_index(el))
+            i += 1
+        return self.get_prob(tuple(actual_coordinates))
+
+    def get_prob_dict(self, vars_and_vals):
         """
         Returns the value of the BeliefTable given a configuration of variables.
-        If the belief table is t_ABC and I want the value of t_{A=0,B=1,C=1}, I have to pass {'A':0, 'B':1, 'C':1}
+        If the belief table is t_ABC and I want the value of t_{A='a1',B='b1',C='c1'}, I have to pass {'A':'a1', '
+        B':'b1', 'C':'c1'} , where 'A','B' and 'C' are the names of the variables
 
-        :param variables: Dict of all variables as keys and values as the value of the single variable
-        :type variables: dict[string,int or float]
+        :param vars_and_vals: Dict of all variable names as keys and values as the value of the single variable
+        :type vars_and_vals: dict[string,int or string]
         :return: the value of the configuration
         :rtype: int or float
         """
-        if variables.keys() != self._variables.keys():
-            raise AttributeError("The variables in the dictionary were wrong")
+        var_names = self.get_variable_names()
+        if sorted(vars_and_vals.keys()) != sorted(var_names):
+            raise AttributeError("The variable names in the dictionary were wrong")
         # Match with the right index
         coords = []
-        for el in self._variables:
-            coords.append(variables[el])
+        for el in var_names:
+            coords.append(vars_and_vals[el])
 
-        return self.get_prob(tuple(coords))
+        return self.get_prob_var_values(tuple(coords))
 
     def get_variables(self):
         """
@@ -230,9 +265,21 @@ class BeliefTable(object):
         """
         return self._variables
 
+    def get_variable_names(self):
+        """
+        Returns a list containing the names of the variables of the table
+
+        :rtype: list[string]
+        """
+        names = []
+        for el in self._variables:
+            names.append(el.name)
+        return names
+
     def set_probability_coord(self, coordinates, value):
         """
         Sets the entry of the numpy table at the given coordinates to a given value
+        Don't use this to get values of the table when the number values of any variable is more than 2
 
         :type coordinates: tuple
         :type value: int or float
@@ -242,43 +289,88 @@ class BeliefTable(object):
             raise AttributeError("Wrong probability coordinate format")
         self._table[coordinates] = value
 
-    def set_probability_dict(self, variables, value):
+    def set_probability_var_values(self, values_coordinates, prob_value):
+        """
+        Sets the entry of the numpy table at the given coordinates,passed as a tuple of var values, to a given value
+        The values must be in order
+
+        :param values_coordinates: tuple of consistent variable values
+        :type values_coordinates: tuple[int or string]
+        :param prob_value: Value to enter into the table
+        :type prob_value: float or int
+        :return: None
+        """
+        if len(values_coordinates) != len(self._variables):
+            raise AttributeError("Wrong number of variables")
+
+        vars_list = list(self._variables.keys())
+
+        actual_coordinates = []
+        i = 0
+        for el in values_coordinates:
+            if isinstance(el, slice):
+                actual_coordinates.append(el)
+            else:
+                actual_coordinates.append(vars_list[i].get_value_index(el))
+            i += 1
+
+        return self.set_probability_coord(tuple(actual_coordinates), prob_value)
+
+    def set_probability_dict(self, vars_and_vals, value):
         """
         Sets the value of the BeliefTable given a configuration of variables and the value.
-        If the belief table is t_ABC and I want the value of t_{A=0,B=1,C=1} to be 0.5,
-        I have to pass {'A':0, 'B':1, 'C':1} and 0.5.
+        If the belief table is t_ABC and I want the value of t_{A='a1',B='b1',C='c1'} to be 0.5,
+        I have to pass {'A':'a1', 'B':'b1', 'C':'c1'} and 0.5, if 'A','B' and 'C' are the names of the variables.
 
-        :param variables: Dict of all variables as keys and values as the value of the single variable
-        :type variables: dict[string,int or float]
+        :param vars_and_vals: Dict of all variables names as keys and values as the value of the single variable
+        :type vars_and_vals: dict[string,int or string]
         :type value: int or float
         :return: None
         """
-        if variables.keys() != self._variables.keys():
-            raise AttributeError("The variables in the dictionary were wrong")
+        var_names = self.get_variable_names()
+        if sorted(vars_and_vals.keys()) != sorted(var_names):
+            raise AttributeError("The variable names in the dictionary were wrong")
         # Match with the right index
         coords = []
-        for el in self._variables:
-            coords.append(variables[el])
+        for el in var_names:
+            coords.append(vars_and_vals[el])
 
-        self.set_probability_coord(tuple(coords), value)
+        return self.set_probability_var_values(tuple(coords), value)
+
+    def get_vars_size(self):
+        """
+        Calculate the size of the table according to the values the variables of the table can take
+
+        :return: size of the table
+        :rtype: int
+        """
+        size = 1
+        for el in self._variables.keys():
+            size *= el.get_cardinality()
+
+        return size
 
     def __str__(self):
         """
         Represents the BeliefTable as follows,for each entry of the table:
-        A:a,B:b,C:c -> value
+        A:'a',B:'b',C:'c' -> value
         """
         full_str = ''
-        single_row = self._table.reshape(self._table.size)
-        i = 0
-        for x in np.nditer(single_row):
-            bin_string = format(i, '0' + str(len(self._variables)) + 'b')
-            j = 0
-            for var in self._variables:
-                full_str += var + ':' + bin_string[j] + ','
-                j += 1
-            full_str = full_str[:-1]
-            full_str += ' -> ' + str(x) + '\n'
-            i += 1
+
+        # i = 0
+        for idx, x in np.ndenumerate(self._table):
+
+            i = 0
+            for val in self._variables:
+                full_str += val.name + ":"
+                value = list(val.values)[idx[i]]
+                if isinstance(value, str):
+                    full_str += "'" + value + "', "
+                else:
+                    full_str += str(value) + ", "
+                i += 1
+            full_str += "-> " + str(x) + "\n"
+
         return full_str
 
     def __copy__(self):
@@ -287,17 +379,78 @@ class BeliefTable(object):
 
         return BeliefTable(copied_vars, copied_table)
 
-"""
-TODO reimplement with multiple values(I hope it won't be hell)
-"""
-class Variable(object):
 
+class Variable(object):
+    """
+    Class that represents a variable and the values it can take
+    """
     name = ""
+
     values = {}
+    """
+    Values the variable can take, they can be int or strings but not both
+    """
 
     def __init__(self, name, values):
+        """
+        Initializes a variable with the given name and values. Only use alphanumeric values for the name and values if
+        you don't want to tempt fate.
+
+        :type name: string
+        :type values: list[string or int] or dict[string or int, None]
+        """
         self.name = name
         self.values = dict.fromkeys(values)
 
+        # Check if all values are of the same type
+        value_list = list(self.values.keys())
+        first_type = type(value_list[0])
+        if not all(isinstance(x, first_type) for x in value_list):
+            raise AttributeError("The value list can't contain  both integers and strings")
+
     def get_cardinality(self):
+        """
+        Returns the number of values a variable can take
+
+        :rtype: int
+        """
         return len(self.values)
+
+    def get_value_index(self, value):
+        """
+        Get the index of the value in the set of values
+
+        :type value: int or string
+        :return: index
+        :rtype: int
+        """
+        if value not in self.values:
+            raise AttributeError("Value not valid for the given variable")
+        return list(self.values.keys()).index(value)
+
+    def __eq__(self, other):
+        if not isinstance(other, Variable):
+            return AttributeError("Wrong comparison types")
+
+        return self.name == other.name and self.values == other.values
+
+    def __str__(self):
+        stringed_var = self.name + ":"
+        for val in sorted(list(self.values.keys())):
+            # Differentiate between string values and int values
+            if isinstance(val, str):
+                stringed_var += "'" + val + "'"
+            else:
+                stringed_var += str(val)
+            stringed_var += ','
+
+        return stringed_var[:-1]
+
+    def __copy__(self):
+        copied_name = str(self.name)
+        copied_values = self.values.copy()
+
+        return Variable(copied_name, copied_values)
+
+    def __hash__(self):
+        return hash(str(self))
