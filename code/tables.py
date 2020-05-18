@@ -158,7 +158,7 @@ class BeliefTable(object):
             else:
                 coord_template.append(0)
 
-        # Iterate over all possible values of V\W 
+        # Iterate over all possible values of V\W
         for entry in sum_entries:
             #bin_string = format(i, '0' + str(len(sum_variables)) + 'b')
             actual_coord = coord_template.copy()
@@ -230,6 +230,8 @@ class BeliefTable(object):
 
         vars_list = list(self._variables.keys())
 
+        values_coordinates = (v.lower() if isinstance(v, str) else v for v in values_coordinates)
+
         actual_coordinates = []
         i = 0
         for el in values_coordinates:
@@ -251,6 +253,9 @@ class BeliefTable(object):
         var_names = self.get_variable_names()
         if sorted(vars_and_vals.keys()) != sorted(var_names):
             raise AttributeError("The variable names in the dictionary were wrong")
+        # Set to lowercase
+        vars_and_vals = {v: w.lower() if isinstance(w, str) else w for v, w in vars_and_vals.items() if isinstance(w, str)}
+
         # Match with the right index
         coords = []
         for el in var_names:
@@ -303,6 +308,8 @@ class BeliefTable(object):
         if len(values_coordinates) != len(self._variables):
             raise AttributeError("Wrong number of variables")
 
+        values_coordinates = (v.lower() if isinstance(v, str) else v for v in values_coordinates)
+
         vars_list = list(self._variables.keys())
 
         actual_coordinates = []
@@ -330,6 +337,10 @@ class BeliefTable(object):
         var_names = self.get_variable_names()
         if sorted(vars_and_vals.keys()) != sorted(var_names):
             raise AttributeError("The variable names in the dictionary were wrong")
+
+        # Set to lowercase
+        vars_and_vals = {v: w.lower() if isinstance(w, str) else w for v, w in vars_and_vals.items() }
+
         # Match with the right index
         coords = []
         for el in var_names:
@@ -369,7 +380,7 @@ class BeliefTable(object):
                 else:
                     full_str += str(value) + ", "
                 i += 1
-            full_str += "-> " + str(x) + "\n"
+            full_str += "-> " + "{:.4f}".format(x) + "\n"
 
         return full_str
 
@@ -385,22 +396,31 @@ class Variable(object):
     Class that represents a variable and the values it can take
     """
     name = ""
-
+    label = ""
+    """
+    Describes the variable's purpose, two Variables with the same name and values but different label are still the same
+    """
     values = {}
     """
-    Values the variable can take, they can be int or strings but not both
+    Values the variable can take, they can be int or strings but not both. If they are strings they are case insensitive
     """
 
-    def __init__(self, name, values):
+    def __init__(self, name, label, values):
         """
-        Initializes a variable with the given name and values. Only use alphanumeric values for the name and values if
-        you don't want to tempt fate.
+        Initializes a variable with the given name,label and values. Only use alphanumeric values for the name and values
+        if you don't want to tempt fate.
 
         :type name: string
-        :type values: list[string or int] or dict[string or int, None]
+        :type label: string
+        :type values: list[string or int]
         """
         self.name = name
-        self.values = dict.fromkeys(values)
+        self.label = label
+
+        if all(isinstance(x, str) for x in values):
+            self.values = dict.fromkeys([x.lower() for x in values])
+        else:
+            self.values = dict.fromkeys(values)
 
         # Check if all values are of the same type
         value_list = list(self.values.keys())
@@ -424,9 +444,23 @@ class Variable(object):
         :return: index
         :rtype: int
         """
+        if isinstance(value, str):
+            value = value.lower()
         if value not in self.values:
             raise AttributeError("Value not valid for the given variable")
         return list(self.values.keys()).index(value)
+
+    def is_valid(self, value):
+        """
+        Checks if the given value is valid for the variable.
+
+        :type value: str or int
+        :rtype: bool
+        """
+        if isinstance(value, str):
+            value = value.lower()
+
+        return value in self.values
 
     def __eq__(self, other):
         if not isinstance(other, Variable):
@@ -434,8 +468,20 @@ class Variable(object):
 
         return self.name == other.name and self.values == other.values
 
-    def __str__(self):
+    def __repr__(self):
         stringed_var = self.name + ":"
+        for val in sorted(list(self.values.keys())):
+            # Differentiate between string values and int values
+            if isinstance(val, str):
+                stringed_var += "'" + val + "'"
+            else:
+                stringed_var += str(val)
+            stringed_var += ','
+
+        return stringed_var[:-1]
+
+    def __str__(self):
+        stringed_var = self.name + "(" + self.label + ") :"
         for val in sorted(list(self.values.keys())):
             # Differentiate between string values and int values
             if isinstance(val, str):
@@ -448,9 +494,10 @@ class Variable(object):
 
     def __copy__(self):
         copied_name = str(self.name)
+        copied_label = str(self.label)
         copied_values = self.values.copy()
 
-        return Variable(copied_name, copied_values)
+        return Variable(copied_name, copied_label, copied_values)
 
     def __hash__(self):
-        return hash(str(self))
+        return hash(repr(self))

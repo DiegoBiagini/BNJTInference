@@ -387,10 +387,12 @@ class JunctionTree(object):
         """
         if isinstance(variable, str):
             variable = self.get_variable_by_name(variable)
+        if isinstance(value, str):
+            value = value.lower()
 
         if variable not in self._variables:
             raise AttributeError("Variable not valid")
-        if value not in variable.values:
+        if not variable.is_valid(value):
             raise AttributeError("Value not valid")
 
         # Find the clique to update

@@ -14,10 +14,13 @@ def main():
     net, jtree = util.load_model("models/cancer.dat")
 
     jtree.initialize_tables(net)
-    jtree.add_evidence('C', 1)
-    jtree.add_evidence('H', 1)
-    jtree.add_evidence('MC', 0)
+
+    jtree.add_evidence('C', 'Present')
+    jtree.add_evidence('H', 'Present')
+    jtree.add_evidence('MC', 'Absent')
     jtree.sum_propagate()
+
+
 
     MCTable = jtree.calculate_variable_probability('MC')
     STable = jtree.calculate_variable_probability('T')
@@ -87,11 +90,11 @@ def build_random_3():
     jtree.set_variable_chosen_clique(C,[A,B,C])
 
 def build_cancer():
-    MC = Variable("MC",[0,1])
-    S = Variable('S',[0,1])
-    T = Variable('T', [0,1])
-    C = Variable('C', [0,1])
-    H = Variable('H', [0,1])
+    MC = Variable('MC', 'Metastatic Cancer', ['Present', 'Absent'])
+    S = Variable('S', 'Serum Calcium', ['Increased', 'Not increased'])
+    T = Variable('T', 'Brain Tumor', ['Present', 'Absent'])
+    C = Variable('C', 'Coma', ['Present', 'Absent'])
+    H = Variable('H', 'Severe Headaches', ['Present', 'Absent'])
 
     tMC = BeliefTable([MC])
     tS = BeliefTable([S, MC])
@@ -99,32 +102,32 @@ def build_cancer():
     tC = BeliefTable([C, S, T])
     tH = BeliefTable([H, T])
 
-    tMC.set_probability_dict({'MC': 0}, 0.8)
-    tMC.set_probability_dict({'MC': 1}, 0.2)
+    tMC.set_probability_dict({'MC': 'Absent'}, 0.8)
+    tMC.set_probability_dict({'MC': 'Present'}, 0.2)
 
-    tS.set_probability_dict({'S': 0, 'MC': 0}, 0.8)
-    tS.set_probability_dict({'S': 0, 'MC': 1}, 0.2)
-    tS.set_probability_dict({'S': 1, 'MC': 0}, 0.2)
-    tS.set_probability_dict({'S': 1, 'MC': 1}, 0.8)
+    tS.set_probability_dict({'S': 'Not increased', 'MC': 'Absent'}, 0.8)
+    tS.set_probability_dict({'S': 'Not increased', 'MC': 'Present'}, 0.2)
+    tS.set_probability_dict({'S': 'Increased', 'MC': 'Absent'}, 0.2)
+    tS.set_probability_dict({'S': 'Increased', 'MC': 'Present'}, 0.8)
 
-    tT.set_probability_dict({'T': 0, 'MC': 0}, 0.95)
-    tT.set_probability_dict({'T': 0, 'MC': 1}, 0.8)
-    tT.set_probability_dict({'T': 1, 'MC': 0}, 0.05)
-    tT.set_probability_dict({'T': 1, 'MC': 1}, 0.2)
+    tT.set_probability_dict({'T': 'Absent', 'MC': 'Absent'}, 0.95)
+    tT.set_probability_dict({'T': 'Absent', 'MC': 'Present'}, 0.8)
+    tT.set_probability_dict({'T': 'Present', 'MC': 'Absent'}, 0.05)
+    tT.set_probability_dict({'T': 'Present', 'MC': 'Present'}, 0.2)
 
-    tC.set_probability_dict({'C': 0, 'S': 0, 'T': 0}, 0.95)
-    tC.set_probability_dict({'C': 0, 'S': 0, 'T': 1}, 0.2)
-    tC.set_probability_dict({'C': 0, 'S': 1, 'T': 0}, 0.2)
-    tC.set_probability_dict({'C': 0, 'S': 1, 'T': 1}, 0.2)
-    tC.set_probability_dict({'C': 1, 'S': 0, 'T': 0}, 0.05)
-    tC.set_probability_dict({'C': 1, 'S': 0, 'T': 1}, 0.8)
-    tC.set_probability_dict({'C': 1, 'S': 1, 'T': 0}, 0.8)
-    tC.set_probability_dict({'C': 1, 'S': 1, 'T': 1}, 0.8)
+    tC.set_probability_dict({'C': 'Absent', 'S': 'Not increased', 'T': 'Absent'}, 0.95)
+    tC.set_probability_dict({'C': 'Absent', 'S': 'Not increased', 'T': 'Present'}, 0.2)
+    tC.set_probability_dict({'C': 'Absent', 'S': 'Increased', 'T': 'Absent'}, 0.2)
+    tC.set_probability_dict({'C': 'Absent', 'S': 'Increased', 'T': 'Present'}, 0.2)
+    tC.set_probability_dict({'C': 'Present', 'S': 'Not increased', 'T': 'Absent'}, 0.05)
+    tC.set_probability_dict({'C': 'Present', 'S': 'Not increased', 'T': 'Present'}, 0.8)
+    tC.set_probability_dict({'C': 'Present', 'S': 'Increased', 'T': 'Absent'}, 0.8)
+    tC.set_probability_dict({'C': 'Present', 'S': 'Increased', 'T': 'Present'}, 0.8)
 
-    tH.set_probability_dict({'H': 0, 'T': 0}, 0.4)
-    tH.set_probability_dict({'H': 0, 'T': 1}, 0.2)
-    tH.set_probability_dict({'H': 1, 'T': 0}, 0.6)
-    tH.set_probability_dict({'H': 1, 'T': 1}, 0.8)
+    tH.set_probability_dict({'H': 'Absent', 'T': 'Absent'}, 0.4)
+    tH.set_probability_dict({'H': 'Absent', 'T': 'Present'}, 0.2)
+    tH.set_probability_dict({'H': 'Present', 'T': 'Absent'}, 0.6)
+    tH.set_probability_dict({'H': 'Present', 'T': 'Present'}, 0.8)
 
     net = BayesianNet()
     net.add_variable(MC)
