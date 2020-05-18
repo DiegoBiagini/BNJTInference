@@ -412,7 +412,7 @@ class Variable(object):
 
         :type name: string
         :type label: string
-        :type values: list[string or int]
+        :type values: list[string or int] or dict[string or int, None]
         """
         self.name = name
         self.label = label
@@ -468,18 +468,6 @@ class Variable(object):
 
         return self.name == other.name and self.values == other.values
 
-    def __repr__(self):
-        stringed_var = self.name + ":"
-        for val in sorted(list(self.values.keys())):
-            # Differentiate between string values and int values
-            if isinstance(val, str):
-                stringed_var += "'" + val + "'"
-            else:
-                stringed_var += str(val)
-            stringed_var += ','
-
-        return stringed_var[:-1]
-
     def __str__(self):
         stringed_var = self.name + "(" + self.label + ") :"
         for val in sorted(list(self.values.keys())):
@@ -500,4 +488,6 @@ class Variable(object):
         return Variable(copied_name, copied_label, copied_values)
 
     def __hash__(self):
-        return hash(repr(self))
+        # frozenset is an immutable representation of a set/dict; hashing it is much faster and safer than hashing a
+        # string
+        return hash((self.name, frozenset(self.values)))

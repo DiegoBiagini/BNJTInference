@@ -98,6 +98,7 @@ class BayesianNet(object):
             raise AttributeError("Table for the variable is not valid")
         self._tables[variable] = table
 
+
     def get_table(self, variable):
         """
         Returns the conditional probability table of a variable in the BN
@@ -304,6 +305,31 @@ class JunctionTree(object):
 
         clique.add_neighbour(separator)
         separator.add_neighbour(clique)
+
+    def connect_cliques(self, clique1, clique2):
+        """
+        Connect two neighbouring cliques by creating a separator between them and linking them all
+
+        :type clique1: list[str] or list[Variable]
+        :param clique2: list[str] or list[Variable]
+        :return:
+        """
+        if all(isinstance(x, str) for x in clique1):
+            clique1 = [self.get_variable_by_name(name) for name in clique1]
+        if all(isinstance(x, str) for x in clique2):
+            clique2 = [self.get_variable_by_name(name) for name in clique2]
+
+        clique_variables_list = [node.get_variables() for node in self._cliques]
+        if dict.fromkeys(clique1) not in clique_variables_list or dict.fromkeys(clique2) not in clique_variables_list:
+            raise AttributeError("One of the cliques wasn't valid")
+
+        common_vars = [var for var in clique1 if var in clique2]
+        if len(common_vars) == 0:
+            raise AttributeError("The cliques aren't neighbouring")
+
+        self.add_separator(common_vars)
+        self.add_link(clique1, common_vars)
+        self.add_link(clique2, common_vars)
 
     def set_variable_chosen_clique(self, variable, clique):
         """
