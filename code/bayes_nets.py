@@ -5,6 +5,7 @@ from collections import Counter
 
 import numpy as np
 
+import util
 from tables import BeliefTable
 from tables import Variable
 
@@ -451,7 +452,7 @@ class JunctionTree(object):
         :rtype: BeliefTable
         """
         # Multiply all the tables of the cliques
-        result_table = BeliefTable(self._variables, np.ones((2,) * len(self._variables)))
+        result_table = BeliefTable(self._variables, np.ones(util.get_shape_from_var_dict(self._variables)))
         for clique in self._cliques:
             result_table = result_table.multiply_table(clique.get_prob_table())
 
@@ -461,30 +462,35 @@ class JunctionTree(object):
 
         return result_table
 
-    def calculate_variables_probability_on_universe(self, variables):
+    def calculate_variable_probability_on_universe(self, variable):
         """
-        Calculate the probabilities of one or more variables in the given configuration of the JunctionTree by
-        calculating the joint prob table and then marginalizing on the given variables.
+        Calculate the probabilities of one variable in the given configuration of the JunctionTree by
+        calculating the joint prob table and then marginalizing on the given variable.
         Does not use the efficiency of Hugin propagation.
 
-        :type variables: Variable or list[Variable] or dict[Variable,None] or list[str]
-        :return: probability table of the given variables
+        :type variable: Variable or str
+        :return: probability table of the given variable
         :rtype: BeliefTable
         """
-        if all(isinstance(x, str) for x in variables):
-            variables = [self.get_variable_by_name(name) for name in variables]
+        if isinstance(variable, str):
+            variable = self.get_variable_by_name(variable)
 
-        if type(variables) is not Variable:
-            variables = dict.fromkeys(variables)
-        else:
-            variables = {variables: None}
+        variable_dict = {variable: None}
 
-        if not variables.keys() <= self._variables.keys():
-            raise AttributeError("Variables not valid", str(variables))
+        if not variable_dict.keys() <= self._variables.keys():
+            raise AttributeError("Variable not valid")
 
         table = self.get_joint_probability_table()
 
-        return table.marginalize(variables)
+        marginalized_table = table.marginalize(variable_dict)
+        norm_constant = 0
+        i = 0
+        for value in variable.values:
+            norm_constant += marginalized_table.get_prob(i)
+            i += 1
+
+        marginalized_table.divide_all(norm_constant)
+        return marginalized_table
 
     def calculate_variable_probability(self, variable):
         """
