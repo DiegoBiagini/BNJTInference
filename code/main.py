@@ -1,26 +1,42 @@
 import cProfile
 
+import models
 import util as util
 from bayes_nets import JunctionTree
 
 
 def main():
     jtree : JunctionTree = None
-    net, jtree = util.load_model("models/poker.dat")
+    net, jtree = models.build_studfarm()
+    util.serialize_model(net, jtree, "models/studfarm.dat")
+    net, jtree = util.load_model("models/studfarm.dat")
+
 
     pr = cProfile.Profile()
     pr.enable()
-
+    #print(net)
     jtree.initialize_tables(net)
+    #print(jtree)
 
-    jtree.add_evidence('MH', '2 alike')
-    jtree.add_evidence('FC', '3 changed')
-    jtree.add_evidence('SC', '1 changed')
-
+    jtree.add_evidence('J', 'sick')
+    jtree.add_evidence('A', 'carrier')
+    jtree.add_evidence('E', 'pure')
 
     jtree.sum_propagate()
 
-    print(jtree.calculate_variable_probability('BH'))
+    print(jtree.calculate_variable_probability('A'))
+    print(jtree.calculate_variable_probability('B'))
+    print(jtree.calculate_variable_probability('C'))
+    print(jtree.calculate_variable_probability('D'))
+    print(jtree.calculate_variable_probability('E'))
+    print(jtree.calculate_variable_probability('F'))
+    print(jtree.calculate_variable_probability('G'))
+    print(jtree.calculate_variable_probability('H'))
+    print(jtree.calculate_variable_probability('I'))
+    print(jtree.calculate_variable_probability('J'))
+    print(jtree.calculate_variable_probability('K'))
+    print(jtree.calculate_variable_probability('L'))
+
 
 
 

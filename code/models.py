@@ -4,6 +4,185 @@
 #
 from bayes_nets import *
 
+def build_studfarm():
+    A = Variable('A', 'Ann', ['Carrier', 'Pure'])
+    B = Variable('B', 'Brian', ['Carrier', 'Pure'])
+    C = Variable('C', 'Cecily', ['Carrier', 'Pure'])
+    D = Variable('D', 'Dorothy', ['Carrier', 'Pure'])
+    E = Variable('E', 'Eric', ['Carrier', 'Pure'])
+    F = Variable('F', 'Fred', ['Carrier', 'Pure'])
+    G = Variable('G', 'Gwenn', ['Carrier', 'Pure'])
+    H = Variable('H', 'Henry', ['Carrier', 'Pure'])
+    I = Variable('I', 'Irene', ['Carrier', 'Pure'])
+    J = Variable('J', 'John', ['Sick', 'Carrier', 'Pure'])
+    K = Variable('K', 'Kafka', ['Carrier', 'Pure'])
+    L = Variable('L', 'Ludwig', ['Carrier', 'Pure'])
+
+    tA = BeliefTable([A])
+    tB = BeliefTable([B])
+    tC = BeliefTable([C])
+    tK = BeliefTable([K])
+    tL = BeliefTable([L])
+
+    tD = BeliefTable([D, A, B])
+    tE = BeliefTable([E, C, B])
+    tF = BeliefTable([F, A, L])
+    tG = BeliefTable([G, A, K])
+    tH = BeliefTable([H, F, D])
+    tI = BeliefTable([I, E, G])
+    tJ = BeliefTable([J, H, I])
+
+    # Fill tables
+    tA.set_probability_dict({'A': 'Carrier'}, 0.01)
+    tA.set_probability_dict({'A': 'Pure'}, 0.99)
+
+    tB.set_probability_dict({'B': 'Carrier'}, 0.01)
+    tB.set_probability_dict({'B': 'Pure'}, 0.99)
+
+    tC.set_probability_dict({'C': 'Carrier'}, 0.01)
+    tC.set_probability_dict({'C': 'Pure'}, 0.99)
+
+    tL.set_probability_dict({'L': 'Carrier'}, 0.01)
+    tL.set_probability_dict({'L': 'Pure'}, 0.99)
+
+    tK.set_probability_dict({'K': 'Carrier'}, 0.01)
+    tK.set_probability_dict({'K': 'Pure'}, 0.99)
+
+    tF.set_probability_dict({'L': 'Carrier', 'A': 'Carrier', 'F': 'Carrier'}, 0.666667)
+    tF.set_probability_dict({'L': 'Carrier', 'A': 'Carrier', 'F': 'Pure'}, 0.333333)
+    tF.set_probability_dict({'L': 'Carrier', 'A': 'Pure', 'F': 'Carrier'}, 0.5)
+    tF.set_probability_dict({'L': 'Carrier', 'A': 'Pure', 'F': 'Pure'}, 0.5)
+    tF.set_probability_dict({'L': 'Pure', 'A': 'Carrier', 'F': 'Carrier'}, 0.5)
+    tF.set_probability_dict({'L': 'Pure', 'A': 'Carrier', 'F': 'Pure'}, 0.5)
+    tF.set_probability_dict({'L': 'Pure', 'A': 'Pure', 'F': 'Carrier'}, 0)
+    tF.set_probability_dict({'L': 'Pure', 'A': 'Pure', 'F': 'Pure'}, 1)
+
+    tD.set_probability_dict({'A': 'Carrier', 'B': 'Carrier', 'D': 'Carrier'}, 0.666667)
+    tD.set_probability_dict({'A': 'Carrier', 'B': 'Carrier', 'D': 'Pure'}, 0.333333)
+    tD.set_probability_dict({'A': 'Carrier', 'B': 'Pure', 'D': 'Carrier'}, 0.5)
+    tD.set_probability_dict({'A': 'Carrier', 'B': 'Pure', 'D': 'Pure'}, 0.5)
+    tD.set_probability_dict({'A': 'Pure', 'B': 'Carrier', 'D': 'Carrier'}, 0.5)
+    tD.set_probability_dict({'A': 'Pure', 'B': 'Carrier', 'D': 'Pure'}, 0.5)
+    tD.set_probability_dict({'A': 'Pure', 'B': 'Pure', 'D': 'Carrier'}, 0)
+    tD.set_probability_dict({'A': 'Pure', 'B': 'Pure', 'D': 'Pure'}, 1)
+
+    tE.set_probability_dict({'B': 'Carrier', 'C': 'Carrier', 'E': 'Carrier'}, 0.666667)
+    tE.set_probability_dict({'B': 'Carrier', 'C': 'Carrier', 'E': 'Pure'}, 0.333333)
+    tE.set_probability_dict({'B': 'Carrier', 'C': 'Pure', 'E': 'Carrier'}, 0.5)
+    tE.set_probability_dict({'B': 'Carrier', 'C': 'Pure', 'E': 'Pure'}, 0.5)
+    tE.set_probability_dict({'B': 'Pure', 'C': 'Carrier', 'E': 'Carrier'}, 0.5)
+    tE.set_probability_dict({'B': 'Pure', 'C': 'Carrier', 'E': 'Pure'}, 0.5)
+    tE.set_probability_dict({'B': 'Pure', 'C': 'Pure', 'E': 'Carrier'}, 0)
+    tE.set_probability_dict({'B': 'Pure', 'C': 'Pure', 'E': 'Pure'}, 1)
+
+    tG.set_probability_dict({'A': 'Carrier', 'K': 'Carrier', 'G': 'Carrier'}, 0.666667)
+    tG.set_probability_dict({'A': 'Carrier', 'K': 'Carrier', 'G': 'Pure'}, 0.333333)
+    tG.set_probability_dict({'A': 'Carrier', 'K': 'Pure', 'G': 'Carrier'}, 0.5)
+    tG.set_probability_dict({'A': 'Carrier', 'K': 'Pure', 'G': 'Pure'}, 0.5)
+    tG.set_probability_dict({'A': 'Pure', 'K': 'Carrier', 'G': 'Carrier'}, 0.5)
+    tG.set_probability_dict({'A': 'Pure', 'K': 'Carrier', 'G': 'Pure'}, 0.5)
+    tG.set_probability_dict({'A': 'Pure', 'K': 'Pure', 'G': 'Carrier'}, 0)
+    tG.set_probability_dict({'A': 'Pure', 'K': 'Pure', 'G': 'Pure'}, 1)
+
+    tH.set_probability_dict({'F': 'Carrier', 'D': 'Carrier', 'H': 'Carrier'}, 0.666667)
+    tH.set_probability_dict({'F': 'Carrier', 'D': 'Carrier', 'H': 'Pure'}, 0.333333)
+    tH.set_probability_dict({'F': 'Carrier', 'D': 'Pure', 'H': 'Carrier'}, 0.5)
+    tH.set_probability_dict({'F': 'Carrier', 'D': 'Pure', 'H': 'Pure'}, 0.5)
+    tH.set_probability_dict({'F': 'Pure', 'D': 'Carrier', 'H': 'Carrier'}, 0.5)
+    tH.set_probability_dict({'F': 'Pure', 'D': 'Carrier', 'H': 'Pure'}, 0.5)
+    tH.set_probability_dict({'F': 'Pure', 'D': 'Pure', 'H': 'Carrier'}, 0)
+    tH.set_probability_dict({'F': 'Pure', 'D': 'Pure', 'H': 'Pure'}, 1)
+
+    tI.set_probability_dict({'E': 'Carrier', 'G': 'Carrier', 'I': 'Carrier'}, 0.666667)
+    tI.set_probability_dict({'E': 'Carrier', 'G': 'Carrier', 'I': 'Pure'}, 0.333333)
+    tI.set_probability_dict({'E': 'Carrier', 'G': 'Pure', 'I': 'Carrier'}, 0.5)
+    tI.set_probability_dict({'E': 'Carrier', 'G': 'Pure', 'I': 'Pure'}, 0.5)
+    tI.set_probability_dict({'E': 'Pure', 'G': 'Carrier', 'I': 'Carrier'}, 0.5)
+    tI.set_probability_dict({'E': 'Pure', 'G': 'Carrier', 'I': 'Pure'}, 0.5)
+    tI.set_probability_dict({'E': 'Pure', 'G': 'Pure', 'I': 'Carrier'}, 0)
+    tI.set_probability_dict({'E': 'Pure', 'G': 'Pure', 'I': 'Pure'}, 1)
+
+    tJ.set_probability_dict({'H': 'Carrier', 'I': 'Carrier', 'J': 'Sick'}, 0.25)
+    tJ.set_probability_dict({'H': 'Carrier', 'I': 'Carrier', 'J': 'Carrier'}, 0.5)
+    tJ.set_probability_dict({'H': 'Carrier', 'I': 'Carrier', 'J': 'Pure'}, 0.25)
+    tJ.set_probability_dict({'H': 'Carrier', 'I': 'Pure', 'J': 'Sick'}, 0)
+    tJ.set_probability_dict({'H': 'Carrier', 'I': 'Pure', 'J': 'Carrier'}, 0.5)
+    tJ.set_probability_dict({'H': 'Carrier', 'I': 'Pure', 'J': 'Pure'}, 0.5)
+    tJ.set_probability_dict({'H': 'Pure', 'I': 'Carrier', 'J': 'Sick'}, 0)
+    tJ.set_probability_dict({'H': 'Pure', 'I': 'Carrier', 'J': 'Carrier'}, 0.5)
+    tJ.set_probability_dict({'H': 'Pure', 'I': 'Carrier', 'J': 'Pure'}, 0.5)
+    tJ.set_probability_dict({'H': 'Pure', 'I': 'Pure', 'J': 'Sick'}, 0)
+    tJ.set_probability_dict({'H': 'Pure', 'I': 'Pure', 'J': 'Carrier'}, 0)
+    tJ.set_probability_dict({'H': 'Pure', 'I': 'Pure', 'J': 'Pure'}, 1)
+
+    net = BayesianNet()
+    net.add_variable(A)
+    net.add_variable(B)
+    net.add_variable(C)
+    net.add_variable(D)
+    net.add_variable(E)
+    net.add_variable(F)
+    net.add_variable(G)
+    net.add_variable(H)
+    net.add_variable(I)
+    net.add_variable(J)
+    net.add_variable(K)
+    net.add_variable(L)
+
+    net.add_dependence(F, L)
+    net.add_dependence(F, A)
+    net.add_dependence(D, A)
+    net.add_dependence(D, B)
+    net.add_dependence(E, B)
+    net.add_dependence(E, C)
+    net.add_dependence(G, A)
+    net.add_dependence(G, K)
+    net.add_dependence(H, F)
+    net.add_dependence(H, D)
+    net.add_dependence(I, E)
+    net.add_dependence(I, G)
+    net.add_dependence(J, H)
+    net.add_dependence(J, I)
+
+    net.add_prob_table(A, tA)
+    net.add_prob_table(B, tB)
+    net.add_prob_table(C, tC)
+    net.add_prob_table(D, tD)
+    net.add_prob_table(E, tE)
+    net.add_prob_table(F, tF)
+    net.add_prob_table(G, tG)
+    net.add_prob_table(H, tH)
+    net.add_prob_table(I, tI)
+    net.add_prob_table(J, tJ)
+    net.add_prob_table(K, tK)
+    net.add_prob_table(L, tL)
+
+    jtree = JunctionTree([A, B, C, D, E, F, G, H, I, J, K, L])
+
+    jtree.add_clique([H, I, J])
+    jtree.add_clique([A, H, B, I])
+    jtree.add_clique([A, B, I, G])
+    jtree.add_clique([A, G, K])
+    jtree.add_clique([B, I, G, E])
+    jtree.add_clique([B, E, C])
+    jtree.add_clique([A, H, D, B])
+    jtree.add_clique([A, F, H, D])
+    jtree.add_clique([A, F, L])
+
+    jtree.connect_cliques([H, I, J], [A, H, B, I])
+    jtree.connect_cliques([A, H, B, I], [A, G, B, I])
+    jtree.connect_cliques([A, G, B, I], [A, G, K])
+    jtree.connect_cliques([A, G, B, I], [B, I, G, E])
+    jtree.connect_cliques([B, I, G, E], [B, E, C])
+    jtree.connect_cliques([A, H, B, I], [A, H, D, B])
+    jtree.connect_cliques([A, H, D, B], [A, F, H, D])
+    jtree.connect_cliques([A, F, H, D], [A, F, L])
+
+    return net, jtree
+
+
+
+
 
 def build_cancer():
     MC = Variable('MC', 'Metastatic Cancer', ['Present', 'Absent'])
@@ -70,16 +249,8 @@ def build_cancer():
     jtree.add_clique(['T', 'S', 'MC'])
     jtree.add_clique(['T', 'H'])
 
-
     jtree.connect_cliques(['T', 'S', 'MC'], ['T', 'S', 'C'])
     jtree.connect_cliques(['T', 'S', 'MC'], ['T', 'H'])
-
-
-    jtree.set_variable_chosen_clique('MC', ['T', 'S', 'MC'])
-    jtree.set_variable_chosen_clique('S', ['T', 'S', 'MC'])
-    jtree.set_variable_chosen_clique('T', ['T', 'S', 'MC'])
-    jtree.set_variable_chosen_clique('C', ['T', 'S', 'C'])
-    jtree.set_variable_chosen_clique('H', ['T', 'H'])
 
     return net, jtree
 
@@ -161,13 +332,6 @@ def build_fire():
     jtree.connect_cliques([F, S], [A, F, T])
     jtree.connect_cliques([A, F, T], [L, A])
     jtree.connect_cliques([L, A], [L, R])
-
-    jtree.set_variable_chosen_clique(S, [S, F])
-    jtree.set_variable_chosen_clique(F, [S, F])
-    jtree.set_variable_chosen_clique(A, [A, F, T])
-    jtree.set_variable_chosen_clique(T, [A, F, T])
-    jtree.set_variable_chosen_clique(L, [A, L])
-    jtree.set_variable_chosen_clique(R, [L, R])
 
     return net, jtree
 
@@ -389,14 +553,6 @@ def build_poker():
     jtree.connect_cliques([OH1, OH0, FC], [OH1, OH2, SC])
     jtree.connect_cliques([OH1, OH2, SC], [OH2, BH, MH])
 
-    jtree.set_variable_chosen_clique(OH0, [OH1, OH0, FC])
-    jtree.set_variable_chosen_clique(FC, [OH1, OH0, FC])
-    jtree.set_variable_chosen_clique(OH1, [OH1, OH0, FC])
-    jtree.set_variable_chosen_clique(SC, [OH2, OH1, SC])
-    jtree.set_variable_chosen_clique(OH2, [OH2, OH1, SC])
-    jtree.set_variable_chosen_clique(MH, [OH2, BH, MH])
-    jtree.set_variable_chosen_clique(BH, [OH2, BH, MH])
-
     return net, jtree
 
 
@@ -462,9 +618,6 @@ def build_monty():
     jtree = JunctionTree([P, F, M])
 
     jtree.add_clique([P, F, M])
-    jtree.set_variable_chosen_clique(P, [P, F, M])
-    jtree.set_variable_chosen_clique(F, [P, F, M])
-    jtree.set_variable_chosen_clique(M, [P, F, M])
 
     return net, jtree
 
@@ -578,14 +731,7 @@ def build_chestclinic():
     jtree.connect_cliques([E, S, B], [E, B, D])
     jtree.connect_cliques([E, B, D], [E, X])
 
-    jtree.set_variable_chosen_clique(A, [A, T])
-    jtree.set_variable_chosen_clique(T, [A, T])
-    jtree.set_variable_chosen_clique(L, [E, S, L])
-    jtree.set_variable_chosen_clique(E, [E, L, T])
-    jtree.set_variable_chosen_clique(S, [E, B, S])
-    jtree.set_variable_chosen_clique(B, [E, B, S])
-    jtree.set_variable_chosen_clique(D, [E, B, D])
-    jtree.set_variable_chosen_clique(X, [E, X])
+
 
     return net, jtree
 

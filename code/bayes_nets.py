@@ -198,6 +198,14 @@ class BayesianNet(object):
 
         raise AttributeError("Variable not found")
 
+    def get_variables(self):
+        """
+        Returns a dict containing the variables of the Bayesian Net
+
+        :rtype: dict[Variable, None]
+        """
+        return dict.fromkeys(self._graph.keys())
+
     def __str__(self):
         """
         Represents the BN as only its graph structure, that is {father : [child1, child2], ...}
@@ -535,6 +543,7 @@ class JunctionTree(object):
 
         second.set_prob_table(tw.multiply_table(ts_star.divide_table(ts)))
 
+
     def distribute_evidence(self, node):
         """
         Second main operation of Hugin propagation. A node(initially the root node) sends all its neighbours the
@@ -567,6 +576,8 @@ class JunctionTree(object):
 
                     common_separator = [x for x in v.get_neighbours() if x in neighbour.get_neighbours()][0]
                     JunctionTree.absorption(v, common_separator, neighbour)
+
+
 
     def collect_evidence(self, node):
         """
@@ -633,6 +644,7 @@ class JunctionTree(object):
 
         # Normalize
         # Find normalizing constant by marginalizing on any variable
+
         variable_chosen = list(self._variables)[0]
         norm_table = self.calculate_variable_probability(variable_chosen)
 
@@ -646,6 +658,8 @@ class JunctionTree(object):
             clique.get_prob_table().divide_all(norm_constant)
         for separator in self._separators:
             separator.get_prob_table().divide_all(norm_constant)
+
+
 
     def get_neighbouring_cliques(self, clique):
         """
@@ -674,6 +688,9 @@ class JunctionTree(object):
         :type bayes_net: BayesianNet
         :return: None
         """
+        # Check if the variables are the same
+        if self._variables != bayes_net.get_variables():
+            raise AttributeError("The variables in the BayesianNet and in the JunctionTree aren't the same")
         # Set all separators and cliques to 1
         for sep in self._separators:
             sep.get_prob_table().set_probability_coord((slice(None),) * len(sep.get_variables()), 1)
@@ -681,18 +698,27 @@ class JunctionTree(object):
         for clique in self._cliques:
             clique.get_prob_table().set_probability_coord((slice(None),) * len(clique.get_variables()), 1)
 
-        # Look up which node in the cluster tree was chosen for each variable to store its table in
+        # Choose the correct clique for each variable and store its table in it
         for variable in self._variables:
-            clique = self._chosen_clique[variable]
+            clique_for_var = [variable] + bayes_net.get_fathers(variable)
 
-            # Find the initial table in the bayes net
+            # Find the first clique that contains a variable and its fathers
+            clique_ref = None
+            for clique in self._cliques:
+                if all(v in list(clique.get_variables().keys()) for v in clique_for_var):
+                    clique_ref = clique
+            if clique_ref is None:
+                raise AttributeError(str(clique_for_var) + " wasn't found")
+
+            self._chosen_clique[variable] = clique_ref
+
             table = bayes_net.get_table(variable)
-
-            clique.set_prob_table(clique.get_prob_table().multiply_table(table))
+            clique_ref.set_prob_table(clique_ref.get_prob_table().multiply_table(table))
 
         # Distribute initial information by allowing a round of message passing
         for node in self._cliques:
-            node.received_evidence = True
+            if node in self._chosen_clique.values():
+                node.received_evidence = True
 
         self.sum_propagate()
 

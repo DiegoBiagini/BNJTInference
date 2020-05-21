@@ -59,6 +59,8 @@ class BeliefTable(object):
 
         # Merge all variables
         new_variables = {**self._variables, **t2._variables}
+        new_variables = dict.fromkeys(sorted(new_variables.keys()))
+
 
         # Create empty table
         new_shape = util.get_shape_from_var_dict(new_variables)
@@ -96,6 +98,7 @@ class BeliefTable(object):
         """
         # Merge all variables
         new_variables = {**self._variables, **t2._variables}
+        new_variables = dict.fromkeys(sorted(new_variables.keys()))
 
         # Create empty table
         new_shape = util.get_shape_from_var_dict(new_variables)
@@ -132,11 +135,10 @@ class BeliefTable(object):
         :return: the marginalized table
         :rtype: BeliefTable
         """
-        new_variables = dict.fromkeys(new_variables)
+        new_variables = dict.fromkeys(sorted(new_variables))
         if not (new_variables.keys() < self._variables.keys()):
             raise AttributeError("Variables to marginalize on must be a subset of variables of the table")
 
-        # new_table = np.zeros((2,)*len(new_variables))
         new_shape = []
         for el in new_variables.keys():
             new_shape.append(el.get_cardinality())
@@ -160,7 +162,6 @@ class BeliefTable(object):
 
         # Iterate over all possible values of V\W
         for entry in sum_entries:
-            #bin_string = format(i, '0' + str(len(sum_variables)) + 'b')
             actual_coord = coord_template.copy()
 
             # Find the subtable by substituting the non ':' places in the index template with actual indexes
@@ -461,6 +462,9 @@ class Variable(object):
             value = value.lower()
 
         return value in self.values
+
+    def __lt__(self, other):
+        return self.name < other.name
 
     def __eq__(self, other):
         if not isinstance(other, Variable):
