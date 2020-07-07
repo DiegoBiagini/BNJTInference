@@ -255,7 +255,7 @@ class BeliefTable(object):
         if sorted(vars_and_vals.keys()) != sorted(var_names):
             raise AttributeError("The variable names in the dictionary were wrong")
         # Set to lowercase
-        vars_and_vals = {v: w.lower() if isinstance(w, str) else w for v, w in vars_and_vals.items() if isinstance(w, str)}
+        vars_and_vals = {v: w.lower() if isinstance(w, str) else w for v, w in vars_and_vals.items() }
 
         # Match with the right index
         coords = []

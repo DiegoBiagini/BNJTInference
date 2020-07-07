@@ -1,12 +1,14 @@
 import cProfile
 
+import menu
 import models
 import util as util
 from bayes_nets import JunctionTree
 
 
 def main():
-    jtree : JunctionTree = None
+    menu.show_first_menu()
+    '''
     net, jtree = models.build_studfarm()
     util.serialize_model(net, jtree, "models/studfarm.dat")
     net, jtree = util.load_model("models/studfarm.dat")
@@ -37,15 +39,10 @@ def main():
     print(jtree.calculate_variable_probability('K'))
     print(jtree.calculate_variable_probability('L'))
 
-
-
-
     pr.disable()
     # after your program ends
     pr.print_stats(sort="calls")
-
-
-
+    '''
 
 
 if __name__ == '__main__':

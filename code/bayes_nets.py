@@ -543,7 +543,6 @@ class JunctionTree(object):
 
         second.set_prob_table(tw.multiply_table(ts_star.divide_table(ts)))
 
-
     def distribute_evidence(self, node):
         """
         Second main operation of Hugin propagation. A node(initially the root node) sends all its neighbours the
@@ -576,8 +575,6 @@ class JunctionTree(object):
 
                     common_separator = [x for x in v.get_neighbours() if x in neighbour.get_neighbours()][0]
                     JunctionTree.absorption(v, common_separator, neighbour)
-
-
 
     def collect_evidence(self, node):
         """
@@ -658,8 +655,6 @@ class JunctionTree(object):
             clique.get_prob_table().divide_all(norm_constant)
         for separator in self._separators:
             separator.get_prob_table().divide_all(norm_constant)
-
-
 
     def get_neighbouring_cliques(self, clique):
         """
@@ -762,6 +757,13 @@ class JunctionTree(object):
             if name == var.name:
                 return var
         raise AttributeError("Variable not found")
+
+    def get_variables(self):
+        """
+        :rtype:dict[Variable]
+        :return: A dictionary containing the variables
+        """
+        return self._variables
 
     def __str__(self):
         """
