@@ -1,17 +1,20 @@
+from os import listdir
+from os.path import isfile, join
+
 from consolemenu import ConsoleMenu
 from consolemenu import SelectionMenu
-from consolemenu.items import FunctionItem, SubmenuItem, CommandItem
+from consolemenu.items import FunctionItem, SubmenuItem
 
 import util
 from bayes_nets import JunctionTree
 
 models_path = "models/"
-available_models = {'Cancer scan': 'cancer.dat', 'Chest clinic': 'chestclinic.dat', 'Fire alarm': 'fire.dat',
-                    'Monty python': 'monty.dat', 'Poker': 'poker.dat', 'Horse farm': 'studfarm.dat'}
-models_list = list(available_models.keys())
 
 
 def show_first_menu():
+    # Record which models are in the models folder
+    models_list = [f for f in listdir(models_path) if isfile(join(models_path, f)) and f[-4:] == ".dat"]
+
     first_menu = ConsoleMenu("Main menu")
 
     submenu = SelectionMenu(models_list, "Load Model")
@@ -30,7 +33,7 @@ def show_first_menu():
 
     selected_model = models_list[submenu.selected_option]
 
-    net, jtree = util.load_model(models_path + available_models[selected_model])
+    net, jtree = util.load_model(models_path + selected_model)
     if net is not None and jtree is not None:
         jtree.initialize_tables(net)
         print("Model loaded succesfully")
@@ -40,6 +43,9 @@ def show_first_menu():
 
 
 def show_loaded_model_menu(model, net, jtree):
+    # Record which models are in the models folder
+    models_list = [f for f in listdir(models_path) if isfile(join(models_path, f)) and str(f)[-4:] == ".dat"]
+
     menu = ConsoleMenu("Main menu - " + model)
 
     describe_bnet = FunctionItem("Describe Bayesian Net", function= lambda net : print(str(net)), args=[net])
@@ -72,7 +78,7 @@ def show_loaded_model_menu(model, net, jtree):
         return
 
     selected_model = models_list[load_new_model.selected_option]
-    net, jtree = util.load_model(models_path + available_models[selected_model])
+    net, jtree = util.load_model(models_path + selected_model)
     if net is not None and jtree is not None:
         jtree.initialize_tables(net)
         print("Model loaded succesfully")

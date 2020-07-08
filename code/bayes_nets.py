@@ -208,10 +208,20 @@ class BayesianNet(object):
 
     def __str__(self):
         """
-        Represents the BN as only its graph structure, that is {father : [child1, child2], ...}
+        Returns a string containing the variables of the BN and its structure, that is {father : [child1, child2], ...}
         """
-        return str(self._graph)
+        rstring = 'Variables:' + str([str(var) for var in self._graph.keys()]) + '\n {\n'
+        for father in self._graph.keys():
+            if len(self._graph[father]) > 0:
+                rstring += "\t" + father.name + " : ["
 
+                for son in self._graph[father]:
+                    rstring += son.name + ", "
+                rstring = rstring[:-2]
+
+                rstring += "],\n"
+        rstring = rstring[:-2] + "\n}"
+        return rstring
 
 class JunctionTree(object):
     """
