@@ -10,9 +10,9 @@ E' necessario installare le seguenti librerie se non già presenti sul sistema:
 * console-menu
 
 E' possibile installarle direttamente attraverso il file requirements.txt  
-'''shell
+```shell
 pip install -r requirements.txt
-'''
+```
 
 ## Uso Guidato
 
@@ -24,69 +24,69 @@ Una volta caricato uno di essi è possibile inserire evidenza in nodi inseriti d
 ### Creazione di un nuovo modello
 Per poter creare un nuovo modello è necessario importare i file bayes_nets.py e tables.py.  
 E' possibile creare una variabile nel seguente modo:  
-'''python
+```python
 var = Variable("Nome", "Descrizione", ["valore1", "valore2"])
-'''
+```
 Specificando un nome identificativo, una descrizione e i valori che tale variabile può assumere(alfanumerici o numerici, ma non entrambi per una stessa variabile)  
   
 A partire da una o più variabili è possibile creare una tabella di probabilità:
-'''python
+```python
 table = BeliefTable([varA, varB, ...])
-'''
+```
 Ed impostare le probabilità delle variabili nella tabella:
-'''python
+```python
 table.set_probability_dict({'Nome': 'valore1'}, 0.01)
-'''
+```
 Per creare un modello di rete Bayesiana i passi sono:
 * Crea l'oggetto Bayesian_Net  
-'''python
+```python
 net = BayesianNet()
-'''
+```
 * Aggiungi delle variabili alla tabella  
-'''python
+```python
 net.add_variable(var)
-'''
+```
 * Inserisci un arco tra variabili  
-'''python
+```python
 net.add_dependence(padre, figlio)
-'''
+```
 * Inserisci la tabella relativa a una certa variabile(consistente con la struttura della rete)
-'''python
+```python
 net.add_prob_table(var, table)
-'''
+```
   
 Successivamente è necessario costruire manualmente il junction tree della rete bayesiana, i passi sono:
 * Costruisci il JunctionTree con le variabili volute
-'''python
+```python
 jtree = JunctionTree([var1, var2, ...])
-'''
+```
 * Aggiungi delle cricche al JunctionTree
-'''python
+```python
 jtree.add_clique([var1, var2, ...])
-'''
+```
 * Aggiungi collegamenti tra cricche
-'''python
+```python
 jtree.connect_cliques([var1, var2, ...], [var3, var4, ...])
-'''
+```
 Fatto questo il modello è pronto per essere usato.
 E' possibile salvarlo su file con la funzione serialize_model(net, jtree, filename), disponibile importando il file util.py.  
 
 ### Uso del modello
 Prima di tutto è necessario inizializzare il JunctionTree ai valori inseriti nella BayesianNet
-'''python
+```python
 jtree.initialize_tables(net)
-'''
+```
 
 A questo punto è possibile inserire evidenza su variabili:
-'''python
+```python
 jtree.add_evidence('Nome', 'valore1')
-'''
+```
 
 Propagare tale evidenza nel JunctionTree:
-'''python
+```python
 jtree.sum_propagate()
-'''
+```
 Consultare le nuove probabilità delle variabili:
-'''python
+```python
 jtree.calculate_variable_probability('Nome')
-'''
+```
