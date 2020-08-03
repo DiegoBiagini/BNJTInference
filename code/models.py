@@ -4,6 +4,7 @@
 #
 from bayes_nets import *
 
+
 def build_studfarm():
     A = Variable('A', 'Ann', ['Carrier', 'Pure'])
     B = Variable('B', 'Brian', ['Carrier', 'Pure'])
@@ -179,9 +180,6 @@ def build_studfarm():
     jtree.connect_cliques([A, F, H, D], [A, F, L])
 
     return net, jtree
-
-
-
 
 
 def build_cancer():
@@ -556,7 +554,6 @@ def build_poker():
     return net, jtree
 
 
-
 def build_monty():
     P = Variable('P', 'Prize', ['door1', 'door2', 'door3'])
     F = Variable('F', 'First Choice', ['door1', 'door2', 'door3'])
@@ -724,14 +721,11 @@ def build_chestclinic():
     jtree.add_clique([E, B, D])
     jtree.add_clique([E, X])
 
-
     jtree.connect_cliques([A, T], [E, L, T])
     jtree.connect_cliques([E, S, L], [E, L, T])
     jtree.connect_cliques([E, S, B], [E, L, S])
     jtree.connect_cliques([E, S, B], [E, B, D])
     jtree.connect_cliques([E, B, D], [E, X])
-
-
 
     return net, jtree
 

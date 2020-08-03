@@ -1,12 +1,10 @@
-import cProfile
+import warnings
 
 import menu
-import models
-import util as util
-from bayes_nets import JunctionTree
 
 
 def main():
+    warnings.filterwarnings('error')
     menu.show_first_menu()
     '''
     net, jtree = models.build_studfarm()

@@ -9,21 +9,8 @@ import util
 class BeliefTable(object):
     """
     The representation of a Belief Table, that is a set of variables(for which a value can be assigned) and a table that
-     contains an entry for each combination of the various variables values.
+     contains an entry for each combination of the various variable values.
      These entries represent different relationships depending on the usage of the BeliefTable.
-    """
-
-    _variables = None
-    """
-    A dictionary of variables,used as an ordered set. Each variable is an object of type Variable in the dictionary 
-    with None as its value.
-    """
-    _table = None
-    """
-    A numpy table that contains all the entries of the BeliefTable. 
-    # For simplicity each variable can only take True or False as its values, so the size of the table is always 2^n, #
-    The size of the table is \prod_{v\in V}|v| where V is the set of variables , that is the product of the number of
-    values each variable can take
     """
 
     def __init__(self, variables, table=None):
@@ -34,7 +21,17 @@ class BeliefTable(object):
         :type table: np.ndarray
         :type variables: list[Variable] or dict[Variable,None]
         """
+        """
+        A dictionary of variables,used as an ordered set. Each variable is an object of type Variable in the dictionary 
+        with None as its value.
+        """
         self._variables = dict.fromkeys(variables)
+
+        """
+        A numpy table that contains all the entries of the BeliefTable. 
+        The size of the table is \prod_{v\in V}|v| where V is the set of variables , that is the product of the number of
+        values each variable can take
+        """
         if table is not None:
             self._table = table
 
@@ -60,7 +57,6 @@ class BeliefTable(object):
         # Merge all variables
         new_variables = {**self._variables, **t2._variables}
         new_variables = dict.fromkeys(sorted(new_variables.keys()))
-
 
         # Create empty table
         new_shape = util.get_shape_from_var_dict(new_variables)
@@ -128,7 +124,7 @@ class BeliefTable(object):
         """
         Marginalizes the BeliefTable on a subset of its variables: t_W =\sum_{V\W} t_V with W\subseteq V
         If I want to marginalize t_AB on A, then I will have t_B as a result, with the following values:
-        t_{B=0} = t_{A=0,B=0} + t_{A=1, B=0} ; t_{B=1} = T_{A=0,B=1} + t_{A=1,B=1}
+        t_{B=0} = t_{A=0,B=0} + t_{A=1, B=0} ; t_{B=1} = t_{A=0,B=1} + t_{A=1,B=1}
 
         :param new_variables: set of variables to marginalize on
         :type new_variables: dict[Variable,None] or list[Variable]
@@ -139,16 +135,11 @@ class BeliefTable(object):
         if not (new_variables.keys() < self._variables.keys()):
             raise AttributeError("Variables to marginalize on must be a subset of variables of the table")
 
-        new_shape = []
-        for el in new_variables.keys():
-            new_shape.append(el.get_cardinality())
-
+        new_shape = util.get_shape_from_var_dict(new_variables)
         new_table = np.zeros(tuple(new_shape))
 
         sum_variables = util.subtract_ordered_dict(self._variables, new_variables)
-        sum_shape = []
-        for el in sum_variables.keys():
-            sum_shape.append(el.get_cardinality())
+        sum_shape = util.get_shape_from_var_dict(sum_variables)
         sum_entries = util.shape_to_list_of_entries(sum_shape)
 
         # Create template for indexing, setting up which variables have to be extracted whole :
@@ -165,7 +156,7 @@ class BeliefTable(object):
             actual_coord = coord_template.copy()
 
             # Find the subtable by substituting the non ':' places in the index template with actual indexes
-            index = 0     # Index for the binary string
+            index = 0
             for ind, element in enumerate(actual_coord):
                 if element != slice(None):
                     actual_coord[ind] = entry[index]
@@ -215,7 +206,7 @@ class BeliefTable(object):
         """
         return self._table[coordinates]
 
-    def get_prob_var_values(self, values_coordinates):
+    def _get_prob_var_values(self, values_coordinates):
         """
         It's used to get the value of a certain configuration of variables, for example if the belief table is t_ABC
         and I want the value of t_{A='a1',B='b0',C='c1'}, I have to pass ('a1','b0','c1')
@@ -255,14 +246,12 @@ class BeliefTable(object):
         if sorted(vars_and_vals.keys()) != sorted(var_names):
             raise AttributeError("The variable names in the dictionary were wrong")
         # Set to lowercase
-        vars_and_vals = {v: w.lower() if isinstance(w, str) else w for v, w in vars_and_vals.items() }
+        vars_and_vals = {v: w.lower() if isinstance(w, str) else w for v, w in vars_and_vals.items()}
 
         # Match with the right index
-        coords = []
-        for el in var_names:
-            coords.append(vars_and_vals[el])
+        coords = [vars_and_vals[el] for el in var_names]
 
-        return self.get_prob_var_values(tuple(coords))
+        return self._get_prob_var_values(tuple(coords))
 
     def get_variables(self):
         """
@@ -277,10 +266,7 @@ class BeliefTable(object):
 
         :rtype: list[string]
         """
-        names = []
-        for el in self._variables:
-            names.append(el.name)
-        return names
+        return [el.name for el in self._variables]
 
     def set_probability_coord(self, coordinates, value):
         """
@@ -343,9 +329,7 @@ class BeliefTable(object):
         vars_and_vals = {v: w.lower() if isinstance(w, str) else w for v, w in vars_and_vals.items() }
 
         # Match with the right index
-        coords = []
-        for el in var_names:
-            coords.append(vars_and_vals[el])
+        coords = [vars_and_vals[el] for el in var_names]
 
         return self.set_probability_var_values(tuple(coords), value)
 
@@ -396,15 +380,6 @@ class Variable(object):
     """
     Class that represents a variable and the values it can take
     """
-    name = ""
-    label = ""
-    """
-    Describes the variable's purpose, two Variables with the same name and values but different label are still the same
-    """
-    values = {}
-    """
-    Values the variable can take, they can be int or strings but not both. If they are strings they are case insensitive
-    """
 
     def __init__(self, name, label, values):
         """
@@ -415,9 +390,15 @@ class Variable(object):
         :type label: string
         :type values: list[string or int] or dict[string or int, None]
         """
+        """
+        Describe the variable's purpose, two Variables with the same name and values but different label are still the same
+        """
         self.name = name
         self.label = label
 
+        """
+        Values the variable can take, they can be int or strings but not both. If they are strings they are case insensitive
+        """
         if all(isinstance(x, str) for x in values):
             self.values = dict.fromkeys([x.lower() for x in values])
         else:
@@ -493,5 +474,5 @@ class Variable(object):
 
     def __hash__(self):
         # frozenset is an immutable representation of a set/dict; hashing it is much faster and safer than hashing a
-        # string
+        # dict
         return hash((self.name, frozenset(self.values)))

@@ -5,7 +5,7 @@ More details about this project can be found in the file **Biagini_assignment.pd
 ## Installazione
 Tutto il codice necessario ad eseguire questo progetto è nella cartella **code**.  
 E' necessario installare le seguenti librerie se non già presenti sul sistema:
-* Numpy
+* numpy
 * pickle
 * console-menu
 
@@ -27,7 +27,7 @@ E' possibile creare una variabile nel seguente modo:
 ```python
 var = Variable("Nome", "Descrizione", ["valore1", "valore2"])
 ```
-Specificando un nome identificativo, una descrizione e i valori che tale variabile può assumere(alfanumerici o numerici, ma non entrambi per una stessa variabile)  
+Specificando un nome identificativo, una descrizione e i valori che tale variabile può assumere(alfanumerici o numerici, ma non entrambi per una stessa variabile).  
   
 A partire da una o più variabili è possibile creare una tabella di probabilità:
 ```python
@@ -38,11 +38,11 @@ Ed impostare le probabilità delle variabili nella tabella:
 table.set_probability_dict({'Nome': 'valore1'}, 0.01)
 ```
 Per creare un modello di rete Bayesiana i passi sono:
-* Crea l'oggetto Bayesian_Net  
+* Crea l'oggetto BayesianNet  
 ```python
 net = BayesianNet()
 ```
-* Aggiungi delle variabili alla tabella  
+* Aggiungi delle variabili alla rete  
 ```python
 net.add_variable(var)
 ```
@@ -68,8 +68,8 @@ jtree.add_clique([var1, var2, ...])
 ```python
 jtree.connect_cliques([var1, var2, ...], [var3, var4, ...])
 ```
-Fatto questo il modello è pronto per essere usato.
-E' possibile salvarlo su file con la funzione serialize_model(net, jtree, filename), disponibile importando il file util.py.  
+Fatto questo il modello è pronto per essere usato.  
+E' possibile salvarlo su file con la funzione `serialize_model(net, jtree, filename)`, disponibile importando il file util.py.  
 
 ### Uso del modello
 Prima di tutto è necessario inizializzare il JunctionTree ai valori inseriti nella BayesianNet
@@ -86,7 +86,7 @@ Propagare tale evidenza nel JunctionTree:
 ```python
 jtree.sum_propagate()
 ```
-Consultare le nuove probabilità delle variabili:
+E infine consultare le nuove probabilità delle variabili:
 ```python
 jtree.calculate_variable_probability('Nome')
 ```

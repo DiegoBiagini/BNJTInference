@@ -49,6 +49,7 @@ def show_loaded_model_menu(model, net, jtree):
     menu = ConsoleMenu("Main menu - " + model)
 
     describe_bnet = FunctionItem("Describe Bayesian Net", function= lambda net : print(str(net)), args=[net])
+
     describe_jtree = FunctionItem("Describe Junction Tree", function=lambda jtree: print(str(jtree)), args=[jtree])
 
     propagate = FunctionItem("Propagate evidence", function=lambda jtree: jtree.sum_propagate(), args=[jtree])
@@ -93,11 +94,15 @@ def add_evidence_option(jtree):
         print(var)
 
     in_str = input("Insert evidence in the form <variable>,<value> :").strip()
-    (chosen_var, chosen_value) = in_str.split(',')
-    if chosen_var is None or chosen_value is None:
-        print("Input error")
+    try:
+        (chosen_var, chosen_value) = in_str.split(',')
+        if chosen_var is None or chosen_value is None:
+            print("Input error")
 
-    jtree.add_evidence(chosen_var, chosen_value)
+        jtree.add_evidence(chosen_var, chosen_value)
+    except ValueError:
+        print("Wrong format")
+
 
 
 def get_probability_option(jtree: JunctionTree):
@@ -108,3 +113,4 @@ def get_probability_option(jtree: JunctionTree):
     in_str = input("Insert the name of the variable you want to see the probabilities of:").strip()
 
     print(jtree.calculate_variable_probability(in_str))
+

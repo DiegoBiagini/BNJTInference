@@ -1,6 +1,7 @@
 #
 # This file contains the data structures used to represent and work on bayesian nets
 #
+import copy
 from collections import Counter
 
 import numpy as np
@@ -11,20 +12,6 @@ from tables import Variable
 
 
 class BayesianNet(object):
-    """
-    A bayesian net, made up of nodes(which are random variables), links between them and tables that represent
-    the conditional probabilities between fathers and sons
-    """
-
-    _graph = {}
-    """
-    Dictionary that represents the structure of the bayesian net, the keys are the variables of the BN(strings), 
-    the values are lists of other variables(the sons of the key)
-    """
-    _tables = {}
-    """
-    Dictionary that contains all variables as keys and tables relative to each RV as values
-    """
 
     def __init__(self, graph=None):
         """
@@ -32,18 +19,25 @@ class BayesianNet(object):
 
         :type graph: dict[Variable,list]
         """
+
+        """
+        The bayesian net, made up of nodes(which are random variables), links between them and tables that represent
+        the conditional probabilities between fathers and sons
+        """
         if graph is None:
             self._graph = {}
         else:
             self._graph = graph
 
+        """
+        Dictionary that contains all variables as keys and tables relative to each RV as values
+        """
         self._tables = {}
 
     def add_variable(self, new_variable):
         """
         Add the given variable to the BN
 
-        :param new_variable: variable to add
         :type new_variable: Variable
         :return: None
         """
@@ -57,9 +51,7 @@ class BayesianNet(object):
         """
         Adds a link between two nodes in the Bayesian Net(child depends on father)
 
-        :param child: child node
         :type child: Variable or str
-        :param father: father node
         :type father: Variable or str
         :return: None
         """
@@ -77,7 +69,7 @@ class BayesianNet(object):
 
     def add_prob_table(self, variable, table):
         """
-        Adds a Belief Table to a variable
+        Adds a BeliefTable to a variable
 
         :type variable: Variable or str
         :type table: BeliefTable
@@ -99,13 +91,11 @@ class BayesianNet(object):
             raise AttributeError("Table for the variable is not valid")
         self._tables[variable] = table
 
-
     def get_table(self, variable):
         """
         Returns the conditional probability table of a variable in the BN
 
         :type variable: Variable
-        :return: table relative to the variable
         :rtype: BeliefTable
         """
         if variable not in self._tables.keys():
@@ -117,7 +107,6 @@ class BayesianNet(object):
         Returns all the father variables of a given variable
 
         :type child: Variable
-        :return: fathers
         :rtype: list[Variables]
         """
         if child not in self._graph.keys():
@@ -189,7 +178,6 @@ class BayesianNet(object):
         Searches for a variable with the given name in the bayesian net
 
         :type name: str
-        :return: variable
         :rtype: Variable
         """
         for var in self._tables.keys():
@@ -205,6 +193,13 @@ class BayesianNet(object):
         :rtype: dict[Variable, None]
         """
         return dict.fromkeys(self._graph.keys())
+
+    def get_graph(self):
+        """
+        Returns the dictionary that represents the structure of the bayesian net
+        :return: dict[Variable,[Variable]]
+        """
+        return self._graph
 
     def __str__(self):
         """
@@ -223,28 +218,11 @@ class BayesianNet(object):
         rstring = rstring[:-2] + "\n}"
         return rstring
 
+
 class JunctionTree(object):
     """
     Class that represents the junction tree relative to a bayesian net, made up of cliques and separators and their
     connections
-    """
-
-    _variables = {}
-    """
-    Dict of Variables, contains the variables of the bayesian net and by extension the variables of the junction tree
-    """
-
-    _cliques = []
-    _separators = []
-    """
-    Both are a list of Node elements
-    """
-
-    _chosen_clique = {}
-    """
-    Dictionary that contains all variables as keys and a reference to a clique as values. 
-    For each variable A a clique that contains pa(A) \cup {A} is chosen during the Junction Tree creation, this dict 
-    stores this information
     """
 
     def __init__(self, variables):
@@ -253,9 +231,22 @@ class JunctionTree(object):
 
         :type variables: dict[Variable,None] or list[Variable]
         """
+        """
+        Dict of Variables, contains the variables of the bayesian net and by extension the variables of the junction tree
+        """
         self._variables = dict.fromkeys(variables)
+
+        """
+        Both are a list of Node elements
+        """
         self._cliques = []
         self._separators = []
+
+        """
+        Dictionary that contains all variables as keys and a reference to a clique as values. 
+        For each variable A a clique that contains pa(A) \cup {A} is chosen during the Junction Tree creation, this dict 
+        stores this information
+        """
         self._chosen_clique = {}
 
     def add_clique(self, clique):
@@ -444,7 +435,7 @@ class JunctionTree(object):
         chosen_clique = self._chosen_clique[variable]
         chosen_clique.received_evidence = True
 
-        table = chosen_clique.get_prob_table()
+        table = copy.copy(chosen_clique.get_prob_table())
 
         # Select which cell in the table has to be set to 0(those that contradict the evidence)
         confuted_values = [x for x in variable.values if x != value]
@@ -459,7 +450,13 @@ class JunctionTree(object):
             table.set_probability_dict(coord_dict, 0)
 
         # Calculate P(U |e) = P(U,e)/P(e)
-        table.divide_all(table.marginalize({variable: None}).get_prob_dict({variable.name: value}))
+        try:
+            table.divide_all(table.marginalize([variable]).get_prob_dict({variable.name: value}))
+            chosen_clique.set_prob_table(table)
+        except RuntimeWarning:
+            print("Inconsistent evidence was entered, operation aborted")
+
+
 
     def get_joint_probability_table(self):
         """
@@ -566,9 +563,7 @@ class JunctionTree(object):
             raise AttributeError("Wrong starting clique")
 
         # Keep track of visited nodes
-        visited_labels = dict.fromkeys(self._cliques)
-        for element in visited_labels:
-            visited_labels[element] = False
+        visited_labels = dict.fromkeys(self._cliques, False)
 
         # Perform a pseudo-BF traversal
         queue = []
@@ -600,14 +595,10 @@ class JunctionTree(object):
             raise AttributeError("Wrong starting clique")
 
         # Keep track of visited nodes
-        visited_labels = dict.fromkeys(self._cliques)
-        for element in visited_labels:
-            visited_labels[element] = False
+        visited_labels = dict.fromkeys(self._cliques, False)
 
         # Keep track of traversal to send back evidence to the correct node
-        parents = dict.fromkeys(self._cliques)
-        for element in parents:
-            parents[element] = None
+        parents = dict.fromkeys(self._cliques, None)
 
         # Perform a pseudo-BF traversal
         queue = []
@@ -627,7 +618,7 @@ class JunctionTree(object):
                     JunctionTree.absorption(current_child, common_separator, ancestors)
 
                     current_child = ancestors
-                    ancestors = parents[ancestors]
+                    ancestors = parents[current_child]
 
                 # Update the state of evidence collecting
                 v.received_evidence = False
@@ -651,20 +642,15 @@ class JunctionTree(object):
 
         # Normalize
         # Find normalizing constant by marginalizing on any variable
-
         variable_chosen = list(self._variables)[0]
         norm_table = self.calculate_variable_probability(variable_chosen)
 
         norm_constant = 0
-        i = 0
-        for value in variable_chosen.values:
+        for i in range(len(variable_chosen.values)):
             norm_constant += norm_table.get_prob(i)
-            i += 1
 
-        for clique in self._cliques:
-            clique.get_prob_table().divide_all(norm_constant)
-        for separator in self._separators:
-            separator.get_prob_table().divide_all(norm_constant)
+        for node in self._cliques + self._separators:
+            node.get_prob_table().divide_all(norm_constant)
 
     def get_neighbouring_cliques(self, clique):
         """
@@ -697,11 +683,8 @@ class JunctionTree(object):
         if self._variables != bayes_net.get_variables():
             raise AttributeError("The variables in the BayesianNet and in the JunctionTree aren't the same")
         # Set all separators and cliques to 1
-        for sep in self._separators:
-            sep.get_prob_table().set_probability_coord((slice(None),) * len(sep.get_variables()), 1)
-
-        for clique in self._cliques:
-            clique.get_prob_table().set_probability_coord((slice(None),) * len(clique.get_variables()), 1)
+        for node in self._separators + self._cliques:
+            node.get_prob_table().set_probability_coord((slice(None),) * len(node.get_variables()), 1)
 
         # Choose the correct clique for each variable and store its table in it
         for variable in self._variables:
@@ -760,7 +743,6 @@ class JunctionTree(object):
         Searches for a variable with the given name in the JunctionTree
 
         :type name: str
-        :return: variable
         :rtype: Variable
         """
         for var in self._variables:
@@ -808,30 +790,25 @@ class Node(object):
     """
     Data structure that represents a clique or a separator in a JunctionTree
     """
-
-    _table = None
-    """
-    BeliefTable of the Node, contains the variables that make up the clique/separator as well
-    """
-
-    _neighbours = []
-    """
-    List of other Nodes that represents the neighbours of the clique/separator
-    """
-
-    received_evidence = None
-    """
-    Boolean value that represents if the Node has received evidence, used in propagation
-    """
-
     def __init__(self, table):
         """
         Initialize a Node to a given table,with no neighbours and with no evidence given
 
         :type table: BeliefTable
         """
+        """
+        BeliefTable of the Node, contains the variables that make up the clique/separator as well
+        """
         self._table = table
+
+        """
+        List of other Nodes that represents the neighbours of the clique/separator
+        """
         self._neighbours = []
+
+        """
+        Boolean value that represents if the Node has received evidence, used in propagation
+        """
         self.received_evidence = False
 
     def get_variables(self):
