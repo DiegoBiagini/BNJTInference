@@ -456,8 +456,6 @@ class JunctionTree(object):
         except RuntimeWarning:
             print("Inconsistent evidence was entered, operation aborted")
 
-
-
     def get_joint_probability_table(self):
         """
         Returns the joint probability table of the whole Bayesian Net by multiplying all the tables of the cliques and
@@ -756,6 +754,13 @@ class JunctionTree(object):
         :return: A dictionary containing the variables
         """
         return self._variables
+
+    def get_cliques_and_seps(self):
+        """
+        :rtype: tuple[list[Node],list[Node]]
+        :return: A tuple containing the list of cliques and separators
+        """
+        return self._cliques, self._separators
 
     def __str__(self):
         """
