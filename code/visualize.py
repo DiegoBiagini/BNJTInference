@@ -54,8 +54,10 @@ def main():
             tree.add_edge(clique.node_vars_to_string(), sep.node_vars_to_string())
 
     pos = nx.planar_layout(tree)
-    nx.draw_networkx_nodes(tree, pos, nodelist=clique_names, node_shape='o', node_size=2000, node_color="white", edge_color="black",  cmap = plt.get_cmap('jet'),with_labels=True)
-    nx.draw_networkx_nodes(tree, pos, nodelist=sep_names, node_shape='^', node_size=2000, node_color="white", edge_color="black",  cmap = plt.get_cmap('jet'),with_labels=True)
+    nx.draw_networkx_nodes(tree, pos, nodelist=clique_names, node_shape='o', node_size=2000, node_color="white",
+                           cmap = plt.get_cmap('jet'))
+    nx.draw_networkx_nodes(tree, pos, nodelist=sep_names, node_shape='^', node_size=2000, node_color="white",
+                           cmap = plt.get_cmap('jet'))
     nx.draw_networkx_edges(tree, pos)
     nx.draw_networkx_labels(tree, pos)
 
