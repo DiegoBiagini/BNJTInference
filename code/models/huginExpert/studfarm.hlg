@@ -1,0 +1,188 @@
+Fri Jul 31 19:03:40 2020
+
+
+Moral links:
+
+    Marrying H and I
+    Marrying E and G
+    Marrying A and B
+    Marrying A and K
+    Marrying F and D
+    Marrying C and B
+    Marrying L and A
+
+
+Triangulating prime component with 3 members:
+    J, I, H
+This component is a clique of cost 12
+
+Triangulating prime component with 3 members:
+    B, E, C
+This component is a clique of cost 8
+
+Triangulating prime component with 3 members:
+    K, G, A
+This component is a clique of cost 8
+
+Triangulating prime component with 8 members:
+    G, I, D, H, B, E, A, F
+
+    Using the best greedy heuristic for triangulation
+
+
+Triangulating prime component with 3 members:
+    A, F, L
+This component is a clique of cost 8
+
+
+Total cost of triangulation for all prime components is 116
+
+
+Elimination sequence:
+
+    J
+    K
+    C
+    E
+    G
+    I
+    B
+    D
+    H
+    L
+    F
+    A
+
+
+Cliques:
+
+Clique 9, 3 members, table size = 8:
+    A, F, L
+
+Clique 8, 4 members, table size = 16:
+    A, F, H, D
+
+Clique 7, 4 members, table size = 16:
+    A, H, D, B
+
+Clique 6, 4 members, table size = 16:
+    A, H, B, I
+
+Clique 5, 4 members, table size = 16:
+    A, B, I, G
+
+Clique 4, 4 members, table size = 16:
+    B, I, G, E
+
+Clique 3, 3 members, table size = 8:
+    B, E, C
+
+Clique 2, 3 members, table size = 8:
+    A, G, K
+
+Clique 1, 3 members, table size = 12:
+    H, I, J
+
+Total clique table size: 116
+
+
+The junction forest:
+
+Creating junction tree with clique 9 as root ...
+
+Cliques 8 and 9 linked, separator has 2 members and table size = 4:
+    A, F
+
+Cliques 7 and 8 linked, separator has 3 members and table size = 8:
+    A, H, D
+
+Cliques 6 and 7 linked, separator has 3 members and table size = 8:
+    A, H, B
+
+Cliques 5 and 6 linked, separator has 3 members and table size = 8:
+    A, B, I
+
+Cliques 4 and 5 linked, separator has 3 members and table size = 8:
+    B, I, G
+
+Cliques 3 and 4 linked, separator has 2 members and table size = 4:
+    B, E
+
+Cliques 2 and 5 linked, separator has 2 members and table size = 4:
+    A, G
+
+Cliques 1 and 6 linked, separator has 2 members and table size = 4:
+    H, I
+
+
+Assignment of potentials to cliques:
+
+    Node K assigned to clique 2
+    Node J assigned to clique 1
+    Node G assigned to clique 2
+    Node I assigned to clique 4
+    Node D assigned to clique 7
+    Node H assigned to clique 8
+    Node B assigned to clique 3
+    Node E assigned to clique 3
+    Node A assigned to clique 9
+    Node F assigned to clique 9
+    Node C assigned to clique 3
+    Node L assigned to clique 9
+
+
+Checking conditional probability potentials:
+
+    No errors found
+
+
+Beliefs for chance nodes:
+
+    K:
+	Carrier    0.01
+	Pure       0.99
+
+    J:
+	Sick       0.000426004
+	Carrier    0.00867453
+	Pure       0.990899
+
+    G:
+	Carrier    0.00996667
+	Pure       0.990033
+
+    I:
+	Carrier    0.00993356
+	Pure       0.990066
+
+    D:
+	Carrier    0.00996667
+	Pure       0.990033
+
+    H:
+	Carrier    0.00911952
+	Pure       0.99088
+
+    B:
+	Carrier    0.01
+	Pure       0.99
+
+    E:
+	Carrier    0.00996667
+	Pure       0.990033
+
+    A:
+	Carrier    0.01
+	Pure       0.99
+
+    F:
+	Carrier    0.00996667
+	Pure       0.990033
+
+    C:
+	Carrier    0.01
+	Pure       0.99
+
+    L:
+	Carrier    0.01
+	Pure       0.99

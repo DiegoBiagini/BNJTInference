@@ -1,0 +1,134 @@
+Fri Jul 31 18:11:19 2020
+
+
+Moral links:
+
+    Marrying MH and OH2
+
+
+Triangulating prime component with 3 members:
+    Besthand, OH2, MH
+This component is a clique of cost 128
+
+Triangulating prime component with 3 members:
+    OH2, OH1, SC
+This component is a clique of cost 216
+
+Triangulating prime component with 3 members:
+    OH1, OH0, FC
+This component is a clique of cost 324
+
+
+Total cost of triangulation for all prime components is 668
+
+
+Elimination sequence:
+
+    FC
+    OH0
+    SC
+    OH1
+    MH
+    Besthand
+    OH2
+
+
+Cliques:
+
+Clique 3, 3 members, table size = 128:
+    OH2, Besthand, MH
+
+Clique 2, 3 members, table size = 216:
+    OH2, OH1, SC
+
+Clique 1, 3 members, table size = 324:
+    OH1, OH0, FC
+
+Total clique table size: 668
+
+
+The junction forest:
+
+Creating junction tree with clique 3 as root ...
+
+Cliques 2 and 3 linked, separator has 1 member and table size = 8:
+    OH2
+
+Cliques 1 and 2 linked, separator has 1 member and table size = 9:
+    OH1
+
+
+Assignment of potentials to cliques:
+
+    Node Besthand assigned to clique 3
+    Node OH2 assigned to clique 2
+    Node MH assigned to clique 3
+    Node OH1 assigned to clique 1
+    Node SC assigned to clique 2
+    Node OH0 assigned to clique 1
+    Node FC assigned to clique 1
+
+
+Checking conditional probability potentials:
+
+    No errors found
+
+
+Beliefs for chance nodes:
+
+    Besthand:
+	myhand     0.639601
+	opponent   0.360399
+
+    OH2:
+	no         0.247185
+	1 a        0.0628259
+	2 v        0.290254
+	2 a        0.0257773
+	fl         0.252582
+	st         0.0881342
+	3 v        0.0211644
+	stfl       0.012077
+
+    MH:
+	no         0.125
+	1 ace      0.125
+	2 consecutive 0.125
+	2 alike    0.125
+	flush      0.125
+	straight   0.125
+	3 alike    0.125
+	straight flush 0.125
+
+    OH1:
+	no         0.0264678
+	1 ace      0.0170008
+	2 consecutive 0.0356821
+	2 of a suit 0.412547
+	2 alike    0.263345
+	flush      0.159887
+	straight   0.0675728
+	3 alike    0.0098285
+	straight flush 0.00766916
+
+    SC:
+	0 Changed  0.244958
+	1 Changed  0.711574
+	2 Changed  0.0434685
+
+    OH0:
+	no         0.1672
+	1 ace      0.0445
+	2 consecutive 0.0635
+	2 of a suit 0.4659
+	2 alike    0.1694
+	flush      0.0494
+	straight   0.0353
+	3 alike    0.0024
+	straight flush 0.0024
+
+    FC:
+	o changed  0.0895
+	1 changed  0.6988
+	2 changed  0.0445
+	3 changed  0.1672

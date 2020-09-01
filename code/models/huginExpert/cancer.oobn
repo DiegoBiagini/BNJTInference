@@ -1,0 +1,164 @@
+class cancer
+{
+    inputs = ();
+    outputs = ();
+    node_size = (100 40);
+    HR_DBN_Num_Slices = "5";
+    HR_Desc = "";
+    HR_OOBN_CheckConsistency = "1";
+    HR_OOBN_FitExpand = "1";
+    HR_Zoom_ZoomFactor = "100";
+    HR_Utility_Link = "63";
+    HR_Probabilistic_Link = "63";
+    HR_Functional_Link = "63";
+    HR_Binding_Link = "63";
+    HR_Information_Arc = "63";
+    HR_Color_Interface = "21";
+    HR_Color_Instance = "0";
+    HR_Color_DiscreteFunction = "5";
+    HR_Color_Function = "4";
+    HR_Color_ContinuousChance = "48";
+    HR_Monitor_Utility_Arrange = "0";
+    HR_Monitor_Mean_Variance = "1";
+    HR_Monitor_Chance_Utility = "1";
+    HR_Compile_MaxMinimalSeparators = "100000";
+    HR_Compile_SaveToMemory = "0";
+    HR_Grid_X = "10";
+    HR_Grid_Y = "10";
+    HR_Grid_GridSnap = "1";
+    HR_Grid_GridShow = "0";
+    HR_Font_Name = "Arial";
+    HR_Font_Size = "-12";
+    HR_Font_Weight = "400";
+    HR_Font_Italic = "0";
+    HR_Propagate_Auto = "0";
+    HR_Propagate_AutoSum = "1";
+    HR_Propagate_AutoNormal = "1";
+    HR_Compile_TriangMethod = "0";
+    HR_Compile_Compress = "0";
+    HR_Compile_Approximate = "0";
+    HR_Compile_ApproxEpsilon = "0.00001";
+    HR_Monitor_AutoUpdGraph = "0";
+    HR_Monitor_GraphPrecision = "100";
+    HR_Monitor_OpenGraph = "0";
+    HR_Monitor_InitStates = "5";
+    HR_Monitor_InitSD = "2";
+    HR_Color_DiscreteChance = "16";
+    HR_Color_ContinuosChance = "48";
+    HR_Color_Utility = "36";
+    HR_Color_Decision = "17";
+    HR_Groups_UserGroupsNo = "0";
+    HR_Groups_GroupNames = "";
+    HR_Groups_GroupColors = "";
+    HRUNTIME_Monitor_InitStates = "5";
+    HRUNTIME_Monitor_OpenGraph = "0";
+    HRUNTIME_Monitor_GraphPrecision = "100";
+    HRUNTIME_Monitor_AutoUpdGraph = "0";
+    HRUNTIME_Compile_ApproxEpsilon = "0.00001";
+    HRUNTIME_Compile_Approximate = "0";
+    HRUNTIME_Compile_Compress = "0";
+    HRUNTIME_Compile_TriangMethod = "0";
+    HRUNTIME_Propagate_AutoNormal = "1";
+    HRUNTIME_Propagate_AutoSum = "1";
+    HRUNTIME_Propagate_Auto = "0";
+    HRUNTIME_Font_Italic = "0";
+    HRUNTIME_Font_Weight = "400";
+    HRUNTIME_Font_Size = "-12";
+    HRUNTIME_Font_Name = "Arial";
+    HRUNTIME_Grid_GridShow = "0";
+    HRUNTIME_Grid_GridSnap = "1";
+    HRUNTIME_Grid_Y = "10";
+    HRUNTIME_Grid_X = "10";
+
+    node MC
+    {
+	label = "Metastatic Cancer";
+	position = (131 0);
+	states = ("Present" "Absent");
+	HR_Group = "0";
+	HR_Desc = "";
+	HR_State_1 = "";
+	HR_State_0 = "";
+	HR_LinkGroup = "[T:0][S:0]";
+	HR_LinkMode = "[C:0][B:0][T:0][S:0]";
+    }
+
+    node S
+    {
+	label = " Serum Calcium";
+	position = (0 128);
+	states = ("Increased" "Not increased");
+	HR_Group = "0";
+	HR_Desc = "";
+	HR_State_1 = "";
+	HR_State_0 = "";
+	HR_LinkGroup = "[C:0]";
+	HR_LinkMode = "[D:0][C:0]";
+    }
+
+    node C
+    {
+	label = "Coma";
+	position = (147 256);
+	states = ("Present" "Absent");
+	HR_Group = "0";
+	HR_Desc = "";
+	HR_State_1 = "";
+	HR_State_0 = "";
+    }
+
+    node T
+    {
+	label = "Brain Tumor";
+	position = (255 128);
+	states = ("Present" "Absent");
+	HR_Group = "0";
+	HR_Desc = "";
+	HR_State_1 = "";
+	HR_State_0 = "";
+	HR_LinkGroup = "[H:0][C:0]";
+	HR_LinkMode = "[E:0][D:0][H:0][C:0]";
+    }
+
+    node H
+    {
+	label = "Severe Headaches";
+	position = (414 266);
+	states = ("Present" "Absent");
+	HR_Group = "0";
+	HR_Desc = "";
+	HR_State_1 = "";
+	HR_State_0 = "";
+    }
+
+    potential (MC)
+    {
+	data = ( 0.2 0.8 );
+    }
+
+    potential (S | MC)
+    {
+	data = (( 0.8 0.2 )	%  MC=Present
+		( 0.2 0.8 ));	%  MC=Absent
+    }
+
+    potential (C | T S)
+    {
+	data = ((( 0.8 0.2 )	%  T=Present  S=Increased
+		 ( 0.8 0.2 ))	%  T=Present  S=Not increased
+		(( 0.8 0.2 )	%  T=Absent  S=Increased
+		 ( 0.05 0.95 )));	%  T=Absent  S=Not increased
+    }
+
+    potential (T | MC)
+    {
+	data = (( 0.2 0.8 )	%  MC=Present
+		( 0.05 0.95 ));	%  MC=Absent
+    }
+
+    potential (H | T)
+    {
+	data = (( 0.8 0.2 )	%  T=Present
+		( 0.6 0.4 ));	%  T=Absent
+    }
+} % class cancer

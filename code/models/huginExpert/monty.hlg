@@ -1,0 +1,64 @@
+Mon Aug 03 18:24:31 2020
+
+
+Moral links:
+
+    Marrying P and F
+
+
+Triangulating prime component with 3 members:
+    M, F, P
+This component is a clique of cost 27
+
+
+Total cost of triangulation for all prime components is 27
+
+
+Elimination sequence:
+
+    P
+    F
+    M
+
+
+Cliques:
+
+Clique 1, 3 members, table size = 27:
+    M, F, P
+
+Total clique table size: 27
+
+
+The junction forest:
+
+Creating junction tree with clique 1 as root ...
+
+
+Assignment of potentials to cliques:
+
+    Node M assigned to clique 1
+    Node F assigned to clique 1
+    Node P assigned to clique 1
+
+
+Checking conditional probability potentials:
+
+    No errors found
+
+
+Beliefs for chance nodes:
+
+    M:
+	door 1     0.333283
+	door 2     0.333283
+	door 3     0.333433
+
+    F:
+	door 1     0.333433
+	door 2     0.333433
+	door 3     0.333133
+
+    P:
+	door 1     0.333333
+	door 2     0.333333
+	door 3     0.333333
