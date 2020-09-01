@@ -1,3 +1,4 @@
+import os
 from os import listdir
 from os.path import isfile, join
 
@@ -52,6 +53,8 @@ def show_loaded_model_menu(model, net, jtree):
 
     describe_jtree = FunctionItem("Describe Junction Tree", function=lambda jtree: print(str(jtree)), args=[jtree])
 
+    visualize = FunctionItem("Visualize Bayesian Net and Junction Tree", function=lambda path: os.system("visualize.py " + path), args=[models_path + model])
+
     propagate = FunctionItem("Propagate evidence", function=lambda jtree: jtree.sum_propagate(), args=[jtree])
 
     load_new_model = SelectionMenu(models_list, "Load New Model")
@@ -63,6 +66,7 @@ def show_loaded_model_menu(model, net, jtree):
 
     menu.append_item(describe_bnet)
     menu.append_item(describe_jtree)
+    menu.append_item(visualize)
     menu.append_item(add_evidence)
     menu.append_item(get_probability)
     menu.append_item(propagate)

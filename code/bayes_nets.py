@@ -84,10 +84,7 @@ class BayesianNet(object):
         # Check if the passed table is correct
         vars_in_table = dict.fromkeys([variable] + self.get_fathers(variable))
 
-        a = Counter(table.get_variables())
-        b = Counter(vars_in_table)
-
-        if not(a == b):
+        if not(Counter(table.get_variables()) == Counter(vars_in_table)):
             raise AttributeError("Table for the variable is not valid")
         self._tables[variable] = table
 
@@ -118,36 +115,6 @@ class BayesianNet(object):
                 fathers.append(el)
 
         return fathers
-
-    def is_acyclic(self):
-        """
-        Checks if the Bayesian Net is acyclic( which it should be if it's a BN) using topological ordering
-        https://www.cs.hmc.edu/~keller/courses/cs60/s98/examples/acyclic/
-
-        :rtype: bool
-        """
-
-        proxy_graph = self._graph.copy()
-
-        while len(proxy_graph) != 0:
-            # Find any leaf
-            leaf = None
-            for el in proxy_graph:
-                if len(proxy_graph[el]) == 0:
-                    leaf = el
-                    break
-            # If no leaves were found the graph is cyclic
-            if leaf is None:
-                return False
-
-            # Remove the leaf found and all the arcs going into it
-            del proxy_graph[leaf]
-
-            for el in proxy_graph:
-                proxy_graph[el] = [x for x in proxy_graph[el] if x != leaf]
-
-        # If the graph has no nodes it's acyclic
-        return True
 
     def get_U_probability_string(self):
         """
@@ -188,15 +155,12 @@ class BayesianNet(object):
 
     def get_variables(self):
         """
-        Returns a dict containing the variables of the Bayesian Net
-
         :rtype: dict[Variable, None]
         """
         return dict.fromkeys(self._graph.keys())
 
     def get_graph(self):
         """
-        Returns the dictionary that represents the structure of the bayesian net
         :return: dict[Variable,[Variable]]
         """
         return self._graph
@@ -818,8 +782,6 @@ class Node(object):
 
     def get_variables(self):
         """
-        Returns the variables that make up the Node
-
         :return: variables
         :rtype: dict[Variable, None]
         """
@@ -827,8 +789,6 @@ class Node(object):
 
     def get_prob_table(self):
         """
-        Returns the table relative to the Node
-
         :return: table
         :rtype: BeliefTable
         """
@@ -836,8 +796,6 @@ class Node(object):
 
     def set_prob_table(self, table):
         """
-        Sets the table relative to the Node
-
         :type table: BeliefTable
         :return: None
         """
@@ -845,8 +803,6 @@ class Node(object):
 
     def add_neighbour(self, node):
         """
-        Add a neighbouring Node
-
         :type node: Node
         :return: None
         """
@@ -854,8 +810,6 @@ class Node(object):
 
     def get_neighbours(self):
         """
-        Returns the list of neighbouring nodes
-
         :return: neighbours
         :rtype: list[Node]
         """

@@ -1,5 +1,6 @@
 #
-# This file contains the structure for belief tables and the operations that can be executed on them
+# This file contains the structure for belief tables and the operations that can be executed on them,as well as
+# the random variables Variable
 #
 import numpy as np
 

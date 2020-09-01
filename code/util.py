@@ -95,7 +95,6 @@ def get_shape_from_var_dict(variables):
     :return: shape
     :rtype: tuple[int]
     """
-
     variables = dict.fromkeys(variables)
     shape = []
     for el in variables.keys():
@@ -113,5 +112,4 @@ def get_size_from_var_dict(variables):
     :return: size
     :rtype: int
     """
-
     return np.prod(get_shape_from_var_dict(variables))

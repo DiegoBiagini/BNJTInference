@@ -3,6 +3,8 @@ import cProfile
 import util as util
 
 
+# File used to check inference speed
+
 def main():
 
     # Load the model you want to profile
@@ -13,10 +15,10 @@ def main():
     jtree.initialize_tables(net)
 
     pr.enable()
+
     jtree.add_evidence('FC', '1 changed')
     jtree.add_evidence('SC', '0 changed')
     jtree.add_evidence('MH', 'flush')
-
     result = jtree.calculate_variable_probability_on_universe('BH')
 
     pr.disable()
@@ -29,6 +31,7 @@ def main():
     jtree.initialize_tables(net)
 
     pr.enable()
+
     jtree.add_evidence('FC', '1 changed')
     jtree.add_evidence('SC', '0 changed')
     jtree.add_evidence('MH', 'flush')

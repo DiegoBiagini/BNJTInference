@@ -162,28 +162,6 @@ class BayesianNetTests(unittest.TestCase):
         net.add_variable(self.A)
         self.assertRaises(AttributeError, net.add_variable, self.A)
 
-    def test_cyclic(self):
-        # Test on acyclic graph
-        net = BayesianNet()
-        net.add_variable(self.A)
-        net.add_variable(self.B)
-        net.add_variable(self.C)
-        net.add_dependence('B', 'A')
-        net.add_dependence('C', 'B')
-
-        self.assertTrue(net.is_acyclic())
-
-        # Test on cyclic graph
-        net = BayesianNet()
-        net.add_variable(self.A)
-        net.add_variable(self.B)
-        net.add_variable(self.C)
-        net.add_dependence('B', 'A')
-        net.add_dependence('C', 'B')
-        net.add_dependence('A', 'C')
-
-        self.assertFalse(net.is_acyclic())
-
     def test_table_assignment(self):
         # Check if assigning tables via identifiers works correctly even when the order of variables is wrong
         S = Variable('S', 'S', [0, 1])

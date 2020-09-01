@@ -8,7 +8,7 @@ E' necessario installare le seguenti librerie se non già presenti sul sistema:
 * numpy
 * pickle
 * console-menu
-
+* networkx
 E' possibile installarle direttamente attraverso il file requirements.txt  
 ```shell
 pip install -r requirements.txt
@@ -19,13 +19,14 @@ pip install -r requirements.txt
 E' possibile eseguire il programma in modalità guidata, eseguendo il file main.py.  
 Ciò non consente la creazione di nuovi modelli, ma rende possibile il caricamento dei modelli già presenti nella cartella models.  
 Una volta caricato uno di essi è possibile inserire evidenza in nodi inseriti dall'utente, propagare l'evidenza e infine consultare le probabilità di qualsiasi variabile nel modello.  
+Inoltre è possibile visualizzare il grafo della rete bayesiana e del junction tree.
 
 ## Uso libero
 ### Creazione di un nuovo modello
 Per poter creare un nuovo modello è necessario importare i file bayes_nets.py e tables.py.  
 E' possibile creare una variabile nel seguente modo:  
 ```python
-var = Variable("Nome", "Descrizione", ["valore1", "valore2"])
+var = Variable("Nome", "Descrizione", ["valore1", "valore2", ...])
 ```
 Specificando un nome identificativo, una descrizione e i valori che tale variabile può assumere(alfanumerici o numerici, ma non entrambi per una stessa variabile).  
   
@@ -50,7 +51,7 @@ net.add_variable(var)
 ```python
 net.add_dependence(padre, figlio)
 ```
-* Inserisci la tabella relativa a una certa variabile(consistente con la struttura della rete)
+* Inserisci la tabella BeliefTable relativa a una certa variabile(consistente con la struttura della rete)
 ```python
 net.add_prob_table(var, table)
 ```

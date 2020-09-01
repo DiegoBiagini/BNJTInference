@@ -5,6 +5,12 @@ import networkx as nx
 
 import util
 
+"""
+Command line utility to visualize a bayesian net and a junction tree, previously created and saved in a file
+
+Use:
+visualize.py model.dat
+"""
 
 def main():
     # Check arguments
@@ -48,7 +54,6 @@ def main():
             tree.add_edge(clique.node_vars_to_string(), sep.node_vars_to_string())
 
     pos = nx.planar_layout(tree)
-    #nx.draw(tree, node_size=2000, node_color="white", edge_color="black",  cmap = plt.get_cmap('jet'),with_labels=True)
     nx.draw_networkx_nodes(tree, pos, nodelist=clique_names, node_shape='o', node_size=2000, node_color="white", edge_color="black",  cmap = plt.get_cmap('jet'),with_labels=True)
     nx.draw_networkx_nodes(tree, pos, nodelist=sep_names, node_shape='^', node_size=2000, node_color="white", edge_color="black",  cmap = plt.get_cmap('jet'),with_labels=True)
     nx.draw_networkx_edges(tree, pos)
