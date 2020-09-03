@@ -9,6 +9,7 @@ Per utilizzare la modalità guidata è necessario installare anche le seguenti l
 * console-menu
 * networkx
 * matplotlib
+
 E' possibile installarle direttamente attraverso il file requirements.txt  
 ```shell
 pip install -r requirements.txt
