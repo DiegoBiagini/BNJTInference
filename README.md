@@ -3,12 +3,12 @@ Project assigned as a final examination method for the course B003725 Intelligen
 More details about this project can be found in the file **Biagini_assignment.pdf**
 
 ## Installazione
-Tutto il codice necessario ad eseguire questo progetto è nella cartella **code**.  
-E' necessario installare le seguenti librerie se non già presenti sul sistema:
-* numpy
-* pickle
+Tutto il codice necessario ad eseguire questo progetto è nella cartella **code**. 
+Per lavorare manualmente su modelli è sufficiente installare la libreria numpy.
+Per utilizzare la modalità guidata è necessario installare anche le seguenti librerie :
 * console-menu
 * networkx
+* matplotlib
 E' possibile installarle direttamente attraverso il file requirements.txt  
 ```shell
 pip install -r requirements.txt
@@ -20,6 +20,7 @@ E' possibile eseguire il programma in modalità guidata, eseguendo il file main.
 Ciò non consente la creazione di nuovi modelli, ma rende possibile il caricamento dei modelli già presenti nella cartella models.  
 Una volta caricato uno di essi è possibile inserire evidenza in nodi inseriti dall'utente, propagare l'evidenza e infine consultare le probabilità di qualsiasi variabile nel modello.  
 Inoltre è possibile visualizzare il grafo della rete bayesiana e del junction tree.
+Dopo ogni inserimento di evidenza è necessario propagarla manualmente.
 
 ## Uso libero
 ### Creazione di un nuovo modello
@@ -72,6 +73,12 @@ jtree.connect_cliques([var1, var2, ...], [var3, var4, ...])
 Fatto questo il modello è pronto per essere usato.  
 E' possibile salvarlo su file con la funzione `serialize_model(net, jtree, filename)`, disponibile importando il file util.py.  
 
+### Caricamento di un modello già costruito
+Nella cartella code/models sono presenti alcuni modelli già costruiti.
+E' possibile caricarli nel seguente modo:
+```python
+net, jtree = util.load_model(model_path)
+```
 ### Uso del modello
 Prima di tutto è necessario inizializzare il JunctionTree ai valori inseriti nella BayesianNet
 ```python

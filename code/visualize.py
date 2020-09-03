@@ -8,9 +8,10 @@ import util
 """
 Command line utility to visualize a bayesian net and a junction tree, previously created and saved in a file
 
-Use:
+Usage:
 visualize.py model.dat
 """
+
 
 def main():
     # Check arguments
@@ -68,6 +69,7 @@ def main():
     manager = plt.get_current_fig_manager()
     manager.window.state('zoomed')
     plt.show()
+
 
 if __name__ == '__main__':
     main()

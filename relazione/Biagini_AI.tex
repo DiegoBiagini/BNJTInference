@@ -14,17 +14,16 @@
 \usepackage{booktabs}
 \usepackage{multirow}
 
-\usepackage[style=verbose-ibid,backend=biber]{biblatex}
+\usepackage[style=verbose-ibid,backend=biber,autocite=footnote]{biblatex}
 
 \addbibresource{ref.bib}
-
     \renewcommand{\arraystretch}{1.5}
 \title{%
   Inferenza su reti Bayesiane con Hugin Propagation \\
   \large Relazione elaborato Intelligenza Artificiale - a.a. 2019/2020}
 
 \author{Diego Biagini}
-
+\date{}
 
 \begin{document}
 \maketitle
@@ -32,18 +31,17 @@
 
 \section{Introduzione}
 Una rete Bayesiana è un tipo di modello grafico utile per rappresentare l'incertezza intrinseca di un sistema reale costituito da vari componenti, insieme ai legami tra di essi.\\
-Il loro uso principale è quello di sfruttare dipendenze e indipendenze tra variabili aleatorie per sapere come la certezza di un evento influenza la probabilità di un altro.\\
-Uno dei modi per trattarle è quello di registrare l'evento conosciuto e propagare questa conoscenza attraverso un grafo relativo alla rete.\\
+Il loro uso principale è quello di sfruttare dipendenze e indipendenze tra variabili aleatorie per sapere come la certezza di un evento influenza la probabilità di un altro, uno dei modi per farlo è quello di registrare l'evento conosciuto e propagare questa conoscenza su un grafo relativo alla rete.\\
 Lo scopo di questo progetto è quello di realizzare un particolare tipo di operazione di propagazione, detta Hugin propagation, come descritta da F.Jensen \autocite{jensen_bnet}.
 \section{Hugin propagation}
-Per prima cosa sono state implementate le varie strutture dati necessarie alla rappresentazione di una rete Bayesiana, ovvero le variabili aleatorie(che rappresenteranno anche i nodi della rete), le tabelle di probabilità condizionata e la rete vera e propria, vista come un grafo diretto.\\
+Per prima cosa sono state implementate le varie strutture dati necessarie alla rappresentazione di una rete Bayesiana, ovvero le variabili aleatorie, le tabelle di probabilità condizionata e la rete vera e propria, vista come un grafo diretto.\\
 Successivamente è stata realizzata la struttura del \emph{JunctionTree} e dentro di esso sono stati inseriti i meccanismi che consentono l'inserimento dell'evidenza e la sua propagazione.
 \subsection{Componenti di base}
 \subsubsection{Variabili aleatorie}
-E' stato scelto di identificare univocamente una variabile aleatoria con un nome e con un insieme di valori, i valori che essa può assumere. La classe che la rappresenta è  \emph{Variable}.
+È stato scelto di identificare univocamente una variabile aleatoria con un nome e con un insieme di valori, i valori che essa può assumere. La classe che la rappresenta è  \emph{Variable}.
 \subsubsection{Belief Table}
 Le tabelle di probabilità condizionata, relative ad un insieme di variabili aleatorie.\\
-Nell'implementazione non è stata definita la relazione precisa tra le variabili della tabella(una tabella sulle variabili A e B può definire sia $\mathbb{P}(A|B)$ sia $\mathbb{P}(B|A)$).\\
+Nell'implementazione non è stata definita la relazione precisa tra le variabili della tabella (una tabella sulle variabili A e B può definire sia $\mathbb{P}(A|B)$ sia $\mathbb{P}(B|A)$).\\
 Per poterle usare nella propagazione sono state definite le operazioni:
 \begin{itemize}
 \item Moltiplicazione tra tabelle: date due tabelle $t_{AB}$ e $t_{BC}$ è possibile moltiplicarle e il risultato è una tabella sulle variabili $ABC$ tale che $t_{AB}\cdot t_{BC}(a,b,c)=t_{AB}(a,b)\cdot t_{BC}(b,c)$
@@ -54,11 +52,10 @@ Per poterle usare nella propagazione sono state definite le operazioni:
 Memorizzata come grafo diretto, attraverso un dizionario, i cui nodi sono \emph{Variable}s.\\
 Dopo aver aggiunto variabili e dipendenze tra di esse è necessario aggiungere le \emph{BeliefTable} relative ad ogni nodo, controllando che la tabella assegnata ad un nodo sia definita sulla variabile del nodo e sulle variabili dei nodi padre.
 \subsection{Da rete Bayesiana a Junction Tree}
-La Hugin propagation non lavora sulla rete bayesiana, ma su una struttura duale detta junction tree, i cui nodi sono insiemi di variabili aleatorie(cricche), a differenza della rete bayesiana.\\ 
-Anche gli archi sono etichettati da un insieme di variabili(le variabili condivise dai nodi collegati) e sono detti separatori.\\
+La Hugin propagation non lavora sulla rete bayesiana, ma su una struttura duale detta junction tree, i cui nodi sono insiemi di variabili aleatorie (cricche) e gli archi sono etichettati da un insieme di variabili (le variabili condivise dai nodi collegati) e sono detti separatori.\\
 Per tradurre il primo modello nel secondo sono necessari i seguenti passi:
 \begin{itemize}
-\item Costruzione del junction tree a partire dalla rete bayesiana(non trattato in questo progetto) e inizializzazione delle tabelle di ogni cricca e separatore(tutte le probabilità sono impostate ad 1)
+\item Costruzione del junction tree a partire dalla rete bayesiana (non trattato in questo progetto) e inizializzazione delle tabelle di ogni cricca e separatore, impostando tutte le probabilità ad 1
 \item Scelta di una cricca per ogni variabile, tale cricca deve contenere la variabile e tutti i suoi padri
 \item Assegnazione della \emph{BeliefTable} di ogni variabile alla cricca scelta
 \end{itemize}
@@ -66,17 +63,19 @@ Usando una struttura di questo tipo è necessario decidere come consultare le pr
 Perchè questo metodo funzioni fin da subito è necessario svolgere un round iniziale di  propagazione dell'evidenza, eseguito simulando l'inserimento di evidenza in ogni variabile e la successiva Hugin propagation.
 \subsection{Inferenza su Junction Tree}
 \subsubsection{Inserimento dell'evidenza}
-Inserire evidenza nel \emph{JunctionTree} che una certa variabile \textbf{A} può solo assumere il valore $A_i$ significa impostare le \emph{BeliefTable} relative ad \textbf{A} in modo che gli stati diversi da $A_i$ siano impossibili(probabilità 0). Allo stesso modo se vogliamo sapere le probabilità dell'universo(che supponiamo sia nota) data l'evidenza possiamo usare la legge di Bayes per ottenere:
+In generale l'inserimento di evidenza in una tabella può essere visto come una moltiplicazione per una tabella $e$ composta da zeri e uni, a seconda di quale valori la ricevono.\\
+Quindi se vogliamo sapere le probabilità dell'universo data l'evidenza possiamo usare la legge di Bayes per ottenere:
 $$ \mathbb{P}(U|e)= \frac{\mathbb{P}(U,e)}{\mathbb{P}(e)}=\frac{\mathbb{P}(U,e)}{\sum_U \mathbb{P}(U,e)}$$
-Però così è necessario conoscere $\mathbb{P}(U)$, il che comporta la gestione di tabelle troppo grandi per un grande numero di variabili. Questo problema viene risolto nella Hugin Propagation mantenendo le tabelle separate nel \emph{JunctionTree}, inserire l'evidenza dentro di esse e successivamente propagarla alle altre tabelle. 
+Però così è necessario mantenere l'intera tabella $\mathbb{P}(U)$, che è troppo grande per un numero significativo di variabili. Questo problema viene risolto nella Hugin Propagation mantenendo le tabelle separate nel \emph{JunctionTree}, inserendo l'evidenza dentro di esse e successivamente propagandola alle altre tabelle.\\
+Ovvero se vogliamo che una certa variabile \textbf{A} possa solo assumere il valore $A_i$ sarà impostata la \emph{BeliefTable} relativa ad \textbf{A} in modo che gli stati diversi da $A_i$ siano impossibili (probabilità 0).
 \subsubsection{Propagazione dell'evidenza}
-La propagazione si basa sul passaggio di informazioni tra nodi del junction tree, ottenuto attraverso l'operazione di assorbimento: date due cricche \textbf{V} e \textbf{W},separate dal separatore \textbf{S}, \textbf{W} assorbe informazioni da \textbf{V} con le seguenti operazioni:
+La propagazione si basa sul passaggio di informazioni tra nodi del junction tree, ottenuto attraverso l'operazione di assorbimento: date due cricche \textbf{V} e \textbf{W}, separate dal separatore \textbf{S}, \textbf{W} assorbe informazioni da \textbf{V} con le seguenti operazioni:
 \begin{itemize}
 \item $t_s^* = \sum_{V\setminus W}t_v$
 \item $t_w^{new}=t_w^{old}\cdot\frac{t_s^*}{t_s}$
 \item $t_s = t_s^*$
 \end{itemize} 
-La Hugin Propagation definisce a questo punto uno schema di passaggio dei messaggi che ottimizza il numero di assorbimenti che devono essere eseguiti. Questo schema fa uso di due funzioni \emph{CollectEvidence} e \emph{DistributeEvidence}, che si occupano rispettivamente di portare l'informazione dalle foglie dell'albero a una radice e viceversa.\\
+La Hugin Propagation definisce a questo punto uno schema di passaggio dei messaggi che ottimizza il numero di assorbimenti che devono essere eseguiti, attraverso l'uso di due funzioni: \emph{CollectEvidence} e \emph{DistributeEvidence}.\\
 Queste operazioni sono state implementate attraversando il junction tree con un attraversamento in ampiezza, applicando assorbimenti tra nodi durante esso.\\
 In conclusione i passaggi eseguiti per compiere un round di scambio messaggi e quindi aggiornare tutte le tabelle sono:
 \begin{itemize}
@@ -89,7 +88,7 @@ In conclusione i passaggi eseguiti per compiere un round di scambio messaggi e q
 Gli esperimenti sono stati eseguiti su diversi modelli trovati nella cartella \emph{Samples} del programma Hugin Expert.
 \subsection{Confronto con Hugin Expert}
 Analizziamo la fedeltà dell'implementazione dell'algoritmo confrontando i risultati con quelli del programma Hugin Expert.\\
-E' possibile ricostruire il modello voluto usando le varie funzioni contenute nel file \emph{models.py}, oppure caricando i modelli dai file presenti nella cartella models, tramite la funzione \emph{util.load\_model}
+È possibile ricostruire il modello voluto usando le varie funzioni contenute nel file \emph{models.py}, oppure caricando i modelli dai file presenti nella cartella models, tramite la funzione \emph{util.load\_model}
 \subsubsection{Monty Hall}
 Modello che rappresenta il classico "Monty Hall problem".\\
 Le tre variabili della rete possono assumere tre valori("door1", "door2", "door3") ed indicano rispettivamente la porta scelta dal concorrente(\textbf{F}),la porta aperta da Monty(\textbf{M}) e la porta dietro cui si trova il premio(\textbf{P}).
@@ -104,7 +103,7 @@ Le tre variabili della rete possono assumere tre valori("door1", "door2", "door3
 \multicolumn{1}{|l|}{$\mathbb{P}(M|P=door2, F=door1 )$} & $door1=0.00,door2=0.00,door3=1.00$          & $door1=0.00,door2=0.00,door3=1.00$             \\ \hline
 \end{tabular}}
 \end{table}
-In questo modello si può notare come sia possibile inserire evidenza contrastante(per esempio $F=door1,M=door1$, Monty non può aprire la stessa porta aperta dal concorrente) ,casistica che deve essere presa in considerazione e considerata come un inserimento errato.
+In questo modello si può notare come sia possibile inserire evidenza contrastante (per esempio $F=door1,M=door1$, Monty non può aprire la stessa porta aperta dal concorrente), casistica che deve essere presa in considerazione e considerata come un inserimento errato.
 \subsubsection{Chest Clinic}
 Modello visto a lezione, riguardante una clinica che si occupa di problemi respiratori.\\
 Le variabili della rete ci dicono: se il paziente è stato in Asia(\textbf{A}), se ha tubercolosi(\textbf{T}), se è fumatore(\textbf{S}),se ha bronchite(\textbf{B}),se ha un cancro ai polmoni(\textbf{L}), se soffre di dispnea(\textbf{D}),se ha un cancro oppure tubercolosi(\textbf{E}), se il risultato dei raggi x è positivo(\textbf{X}).\\
@@ -120,7 +119,7 @@ Ogni variabile può solo assumere i valori "yes" o "no".
 \end{tabular}}
 \end{table}
 \subsubsection{Stud Farm}
-Modello che rappresenta una fattoria contenente 12 cavalli(le variabili della rete, identificate dalle lettere da \textbf{A} a \textbf{L}), che possono essere portatori oppure no di un gene recessivo che causa una malattia.\\
+Modello che rappresenta una fattoria contenente 12 cavalli (le variabili della rete, identificate dalle lettere da \textbf{A} a \textbf{L}), che possono essere portatori oppure no di un gene recessivo che causa una malattia.\\
 Il cavallo \textbf{J} può essere "carrier","pure" o "sick"(indicati come c,p,s nella tabella); gli altri cavalli possono essere "carrier" o "pure".
 \begin{table}[H]
 \resizebox{\textwidth}{!}{
@@ -157,7 +156,7 @@ E' possibile riprodurre i risultati caricando il modello voluto nel file \emph{p
 \end{table}
 
 \section{Conclusioni}
-E' stato constatato il corretto funzionamento del programma, il quale restituisce sempre dati concordi col programma Hugin Expert.\\
+È stato constatato il corretto funzionamento del programma, il quale restituisce sempre dati concordi col programma Hugin Expert.\\
 Inoltre è stato constatato come l'uso di tale propagazione dell'evidenza sia estremamente più veloce rispetto a un semplice prodotto tra tabelle.
 
 \end{document}

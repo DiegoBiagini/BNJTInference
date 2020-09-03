@@ -55,14 +55,14 @@ def show_loaded_model_menu(model, net, jtree):
 
     visualize = FunctionItem("Visualize Bayesian Net and Junction Tree", function=lambda path: os.system("visualize.py " + path), args=[models_path + model])
 
-    propagate = FunctionItem("Propagate evidence", function=lambda jtree: jtree.sum_propagate(), args=[jtree])
+    propagate = FunctionItem("Propagate evidence", function=lambda jtree: [jtree.sum_propagate(), print("Evidence propagated")], args=[jtree])
 
     load_new_model = SelectionMenu(models_list, "Load New Model")
     load_new_model_item = SubmenuItem("Load a new model", load_new_model, menu=menu, should_exit=True)
 
     add_evidence = FunctionItem("Add evidence", function=add_evidence_option, args=[jtree])
     get_probability = FunctionItem("Get probability of a variable", function=get_probability_option, args=[jtree])
-    reset_model = FunctionItem("Reset Model", function=lambda net,jtree : jtree.initialize_tables(net), args=[net,jtree])
+    reset_model = FunctionItem("Reset Model", function=lambda net, jtree : [jtree.initialize_tables(net), print("Tables reinitialized")], args=[net, jtree])
 
     menu.append_item(describe_bnet)
     menu.append_item(describe_jtree)
@@ -104,9 +104,11 @@ def add_evidence_option(jtree):
             print("Input error")
 
         jtree.add_evidence(chosen_var, chosen_value)
+        print("Evidence entered successfully")
     except ValueError:
         print("Wrong format")
-
+    except RuntimeError:
+        print("Conflicting evidence was entered, operation aborted")
 
 
 def get_probability_option(jtree: JunctionTree):

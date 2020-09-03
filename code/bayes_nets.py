@@ -418,7 +418,7 @@ class JunctionTree(object):
             table.divide_all(table.marginalize([variable]).get_prob_dict({variable.name: value}))
             chosen_clique.set_prob_table(table)
         except RuntimeWarning:
-            print("Inconsistent evidence was entered, operation aborted")
+            raise RuntimeError("Conflicting evidence was entered")
 
     def get_joint_probability_table(self):
         """
