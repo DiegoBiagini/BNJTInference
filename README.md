@@ -1,7 +1,10 @@
 # BNJTInference
 Project assigned as a final examination method for the course B003725 Intelligenza Artiﬁciale (2019/20), taught by professor Frasconi Paolo at Università degli studi di Firenze.  
 More details about this project can be found in the file **Biagini_assignment.pdf**
+## Materiale reperito da altre fonti
+Nella cartella code/models/huginExpert sono presenti file contenenti dei modelli di reti Bayesiane, utilizzabili col programma Hugin Expert e trovati nella cartella samples dell'installazione.
 
+Questi modelli sono stati usati per verificare il corretto funzionamento del programma.
 ## Installazione
 Tutto il codice necessario ad eseguire questo progetto è nella cartella **code**. 
 Per lavorare manualmente su modelli è sufficiente installare la libreria numpy.
