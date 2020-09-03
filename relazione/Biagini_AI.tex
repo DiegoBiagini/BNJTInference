@@ -33,7 +33,7 @@
 Una rete Bayesiana è un tipo di modello grafico utile per rappresentare l'incertezza intrinseca di un sistema reale costituito da vari componenti, insieme ai legami tra di essi.\\
 Il loro uso principale è quello di sfruttare dipendenze e indipendenze tra variabili aleatorie per sapere come la certezza di un evento influenza la probabilità di un altro, uno dei modi per farlo è quello di registrare l'evento conosciuto e propagare questa conoscenza su un grafo relativo alla rete.\\
 Lo scopo di questo progetto è quello di realizzare un particolare tipo di operazione di propagazione, detta Hugin propagation, come descritta da F.Jensen \autocite{jensen_bnet}.
-\section{Hugin propagation}
+\section{Inferenza su reti Bayesiane}
 Per prima cosa sono state implementate le varie strutture dati necessarie alla rappresentazione di una rete Bayesiana, ovvero le variabili aleatorie, le tabelle di probabilità condizionata e la rete vera e propria, vista come un grafo diretto.\\
 Successivamente è stata realizzata la struttura del \emph{JunctionTree} e dentro di esso sono stati inseriti i meccanismi che consentono l'inserimento dell'evidenza e la sua propagazione.
 \subsection{Componenti di base}
@@ -61,7 +61,7 @@ Per tradurre il primo modello nel secondo sono necessari i seguenti passi:
 \end{itemize}
 Usando una struttura di questo tipo è necessario decidere come consultare le probabilità che una variabile assuma ciascuno dei suoi valori, per fare questo basta estrarre la \emph{BeliefTable} della cricca scelta per tale variabile durante la fase di creazione e marginalizzare tale tabella sulla variabile.\\
 Perchè questo metodo funzioni fin da subito è necessario svolgere un round iniziale di  propagazione dell'evidenza, eseguito simulando l'inserimento di evidenza in ogni variabile e la successiva Hugin propagation.
-\subsection{Inferenza su Junction Tree}
+\subsection{Inferenza con Junction Tree}
 \subsubsection{Inserimento dell'evidenza}
 In generale l'inserimento di evidenza in una tabella può essere visto come una moltiplicazione per una tabella $e$ composta da zeri e uni, a seconda di quale valori la ricevono.\\
 Quindi se vogliamo sapere le probabilità dell'universo data l'evidenza possiamo usare la legge di Bayes per ottenere:
